@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "module": "es2020",
+        "lib": ["es2020", "DOM"],
+        "target": "es2020",
+        "outDir": "js"
+    },
+
+    "files": ["src/main.ts"]
+}
