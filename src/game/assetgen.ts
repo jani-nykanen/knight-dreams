@@ -56,17 +56,20 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
     }
 
     c.fillStyle = "#000000";
+    c.translate(8, 0);
 
     //
     // Grass & soil (ground & sky)
     //
 
-    // Grass edges
+    
     for (let j = 0; j < 2; ++ j) {
-        
+
+        // Grass edges
         c.drawImage(base, 12, 0, 4, 8, 4, j*32, 4, 8);
         c.drawImage(base, 8, 0, 4, 8, 4*16 - 8, j*32, 4, 8);
-    
+        
+        // Other grassy stuff
         for (let i = 0; i < 6; ++ i) {
 
             if (j == 1) {
@@ -79,9 +82,6 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
                     put(5, 3, i + 1, 5);
             }
 
-            put(0, 0, i + 1, j*4);
-            put(2, 0, i + 1, j*4 + 1, 0, -2);
-
             if (j == 0) {
 
                 for (let k = 0; k < 3; ++ k) {
@@ -89,6 +89,9 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
                     put(0, 1, i + 1, k + 1);
                 }
             }
+
+            put(0, 0, i + 1, j*4);
+            put(2, 0, i + 1, j*4 + 1, 0, -2);
         }
     }
 
