@@ -97,10 +97,9 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
     // Soil edges
     for (let i = 1; i < 4; ++ i) {
 
-        c.drawImage(base, 8, 8, 4, 8, 8, i*8, 4, 8);
-        c.drawImage(base, 12, 8, 4, 8, 52, i*8, 4, 8);
+        c.drawImage(base, 8, 8, 2, 8, 8, i*8, 2, 8);
+        c.drawImage(base, 14, 8, 2, 8, 54, i*8, 2, 8);
     }
-
 
 
     // Tiny platform
@@ -168,6 +167,9 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
         put(2, 1, 15, 5 - j);
         put(3, 1, 16, 5 - j);
     }
+    // Hat shadow
+    c.fillStyle = "#aaaa55";
+    c.fillRect(122, 16, 12, 1);
 
     // Ring
     c.drawImage(base, 40, 16, 24, 8, 116, 24, 24, 8);
@@ -178,7 +180,6 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
         put(6, 0, 14 + i, 0);
         put(6, 1, 14 + i, 1);
     }
-
     for (let i = 0; i < 2; ++ i) {
 
         put(5 + i*2, 0, 13 + i*5, 0);

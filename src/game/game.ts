@@ -37,7 +37,7 @@ export class Game implements Scene {
         canvas.moveTo();
         canvas.clear("rgb(85, 170, 255)");
 
-        canvas.drawBitmap(assets.getBitmap("terrain"), 0, 0);
+        // canvas.drawBitmap(assets.getBitmap("terrain"), 0, 0);
 
         this.terrain.draw(canvas, assets);
     }
