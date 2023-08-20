@@ -24,7 +24,7 @@ const PALETTE = [
 
 const COLOR_MAP = [
 
-    "1540", "1540", "6670", "1220", "1670", "19A0", "19A0", "19A0",
+    "1540", "1540", "6670", undefined, "1670", "19A0", "19A0", "19A0",
     "1670", "1670", "1B80", "1B80", "1670", "19A0", "19A0", "19A0",
     "1670", "1670", "1540", "1540", "1670", "1B80", "1B80", "1B80",
     "6660", "6660", "1540", "1540", "1670", "1670", "1C20", undefined,
@@ -99,11 +99,24 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
         c.drawImage(base, 12, 8, 4, 8, 52, i*8, 4, 8);
     }
 
+    // Tiny platform
+    put(0, 2, 8, 5);
+    put(1, 2, 9, 5);
+
+    for (let i = 0; i < 2; ++ i) {
+
+        put(0, 0, 8 + i, 4);
+        put(2, 0, 8 + i, 5, 0, -2);
+    }
+
+
     // Correction pixels
     c.fillRect(8, 6, 1, 2);
     c.fillRect(55, 6, 1, 2);
     c.fillRect(8, 6 + 32, 1, 2);
     c.fillRect(55, 6 + 32, 1, 2);
+    c.fillRect(64, 6 + 32, 1, 2);
+    c.fillRect(79, 6 + 32, 1, 2);
 
     // Slopes
     let shift : number;
@@ -124,7 +137,49 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
             put(j, 3, 8 + i + j*2, 2 + shift, 0, -1);
         }
     }
+
+
+    // 
+    // Bridge & spikes
+    //
+
+    for (let i = 0; i < 2; ++ i) {
+
+        // Bridge
+        put(4, 0, 10 + i, 4);
+        put(4, 1, 10 + i, 5);
+
+        // Spikes
+        put(6, 3, 12 + i, 5);
+    }
+
+
+    //
+    // Mushrooms
+    //
     
+    // "Leg"
+    for (let j = 0; j < 4; ++ j) {
+
+        put(2, 1, 14, 5 - j);
+        put(3, 1, 15, 5 - j);
+    }
+
+    // Ring
+    c.drawImage(base, 40, 16, 24, 8, 108, 24, 24, 8);
+
+    // Hat
+    for (let i = 0; i < 4; ++ i) {
+
+        put(6, 0, 13 + i, 0);
+        put(6, 1, 13 + i, 1);
+    }
+
+    for (let i = 0; i < 2; ++ i) {
+
+        put(5 + i*2, 0, 12 + i*5, 0);
+        put(5 + i*2, 1, 12 + i*5, 1);
+    }
 }
 
 
