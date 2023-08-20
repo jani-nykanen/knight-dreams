@@ -61,7 +61,6 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
     //
     // Grass & soil (ground & sky)
     //
-
     
     for (let j = 0; j < 2; ++ j) {
 
@@ -102,14 +101,16 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
         c.drawImage(base, 12, 8, 4, 8, 52, i*8, 4, 8);
     }
 
+
+
     // Tiny platform
-    put(0, 2, 8, 5);
-    put(1, 2, 9, 5);
+    put(0, 2, 9, 5);
+    put(1, 2, 10, 5);
 
     for (let i = 0; i < 2; ++ i) {
 
-        put(0, 0, 8 + i, 4);
-        put(2, 0, 8 + i, 5, 0, -2);
+        put(0, 0, 9 + i, 4);
+        put(2, 0, 9 + i, 5, 0, -2);
     }
 
 
@@ -118,8 +119,8 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
     c.fillRect(55, 6, 1, 2);
     c.fillRect(8, 6 + 32, 1, 2);
     c.fillRect(55, 6 + 32, 1, 2);
-    c.fillRect(64, 6 + 32, 1, 2);
-    c.fillRect(79, 6 + 32, 1, 2);
+    c.fillRect(72, 6 + 32, 1, 2);
+    c.fillRect(87, 6 + 32, 1, 2);
 
     // Slopes
     let shift : number;
@@ -127,17 +128,17 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
 
         for (let i = 0; i < 4; ++ i) {
 
-            put(0, 1, 8 + i, 2 + j);
+            put(0, 1, 9 + i, 2 + j);
         }
 
         for (let i = 0; i < 2; ++ i) {
 
             shift = i*j*2 - (j + i);
 
-            put(4, 2 + j, 8 + i + j*2, 2 + shift);
-            put(2 + j, 2, 8 + i + j*2, 1 + shift);
-            put(2 + j, 3, 8 + i + j*2, 2 + shift);
-            put(j, 3, 8 + i + j*2, 2 + shift, 0, -1);
+            put(4, 2 + j, 9 + i + j*2, 2 + shift);
+            put(2 + j, 2, 9 + i + j*2, 1 + shift);
+            put(2 + j, 3, 9 + i + j*2, 2 + shift);
+            put(j, 3, 9 + i + j*2, 2 + shift, 0, -1);
         }
     }
 
@@ -149,11 +150,11 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
     for (let i = 0; i < 2; ++ i) {
 
         // Bridge
-        put(4, 0, 10 + i, 4);
-        put(4, 1, 10 + i, 5);
+        put(4, 0, 11 + i, 4);
+        put(4, 1, 11 + i, 5);
 
         // Spikes
-        put(6, 3, 12 + i, 5);
+        put(6, 3, 13 + i, 5);
     }
 
 
@@ -164,24 +165,24 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
     // "Leg"
     for (let j = 0; j < 4; ++ j) {
 
-        put(2, 1, 14, 5 - j);
-        put(3, 1, 15, 5 - j);
+        put(2, 1, 15, 5 - j);
+        put(3, 1, 16, 5 - j);
     }
 
     // Ring
-    c.drawImage(base, 40, 16, 24, 8, 108, 24, 24, 8);
+    c.drawImage(base, 40, 16, 24, 8, 116, 24, 24, 8);
 
     // Hat
     for (let i = 0; i < 4; ++ i) {
 
-        put(6, 0, 13 + i, 0);
-        put(6, 1, 13 + i, 1);
+        put(6, 0, 14 + i, 0);
+        put(6, 1, 14 + i, 1);
     }
 
     for (let i = 0; i < 2; ++ i) {
 
-        put(5 + i*2, 0, 12 + i*5, 0);
-        put(5 + i*2, 1, 12 + i*5, 1);
+        put(5 + i*2, 0, 13 + i*5, 0);
+        put(5 + i*2, 1, 13 + i*5, 1);
     }
 }
 
