@@ -4,17 +4,20 @@ import { Scene, SceneParameter } from "../core/scene.js";
 import { Canvas, TextAlign } from "../renderer/canvas.js";
 import { InputState } from "../core/input.js";
 import { Terrain } from "./terrain.js";
+import { Player } from "./player.js";
 
 
 export class Game implements Scene {
 
 
     private terrain : Terrain;
+    private player : Player;
 
 
     constructor(event : ProgramEvent) {
 
         this.terrain = new Terrain(event);
+        this.player = new Player(64, 64);
     }
 
 
@@ -29,6 +32,9 @@ export class Game implements Scene {
         const globalSpeed = 1.0; // TEMP
 
         this.terrain.update(globalSpeed, event);
+
+        this.player.update(globalSpeed, event);
+        this.terrain.objectCollision(this.player, event);
     }
     
     
@@ -40,6 +46,8 @@ export class Game implements Scene {
         // canvas.drawBitmap(assets.getBitmap("terrain"), 0, 0);
 
         this.terrain.draw(canvas, assets);
+
+        this.player.draw(canvas, undefined);
     }
 
 

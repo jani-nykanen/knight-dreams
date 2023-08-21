@@ -3,7 +3,7 @@ import { AssetManager } from "../core/assets.js";
 import { ProgramEvent } from "../core/event.js";
 import { Bitmap } from "../renderer/bitmap.js";
 import { Canvas } from "../renderer/canvas.js";
-
+import { GameObject } from "./gameobject.js";
 
 
 const enum GroundType {
@@ -26,7 +26,7 @@ export class Terrain {
     private groundHeight : number[];
     private groundType : GroundType[];
     private activeHeight : number = 0;
-    private activeType : GroundType = GroundType.Gap;
+    private activeType : GroundType;
 
     private groundTimer : number = 1;
     private groundSlopeTimer : number = 0;
@@ -35,6 +35,7 @@ export class Terrain {
     private mushrooms : number[];
     private mushroomHats : number[];
     private mushroomTimer : number;
+    private lastMushroomHeight : number = 0;
 
     private tilePointer : number = 0;
     private tileOffset : number = 0;
@@ -50,8 +51,10 @@ export class Terrain {
         this.width = ((event.screenWidth / 16) | 0) + HEIGHT_MARGIN;
         this.height = (event.screenHeight / 16) | 0;
 
-        this.groundHeight = (new Array<number> (this.width)).fill(-1);
-        this.groundType = (new Array<GroundType> (this.width)).fill(GroundType.Gap);
+        this.activeHeight = this.height - 2;
+        this.groundHeight = (new Array<number> (this.width)).fill(this.height - 2);
+        this.groundType = (new Array<GroundType> (this.width)).fill(GroundType.Ground);
+        this.activeType = GroundType.Ground;
 
         this.mushroomTimer = sampleUniform(MUSHROOM_TIME_MIN, MUSHROOM_TIME_MAX);
         this.mushrooms = (new Array<number> (this.width)).fill(-1);
@@ -77,6 +80,9 @@ export class Terrain {
 
         const BRIDGE_PROB = 0.25;
         const SLOPE_PROB_FACTOR = 0.1;
+        const SLOPE_PROB_MAX = 0.50;
+
+        const MUSHROOM_SAFE_HEIGHT = 2;
 
         let oldType = this.activeType;
         let dir : number;
@@ -95,7 +101,9 @@ export class Terrain {
             if (this.activeType == GroundType.Ground && 
                 oldType == GroundType.Gap) {
 
-                this.activeHeight = this.height - sampleUniform(GROUND_MIN, GROUND_MAX);
+                this.activeHeight = Math.max(
+                    this.lastMushroomHeight + MUSHROOM_SAFE_HEIGHT, 
+                    this.height - sampleUniform(GROUND_MIN, GROUND_MAX));
             }
 
             this.groundTimer = sampleUniform(
@@ -106,7 +114,7 @@ export class Terrain {
         else if (this.activeType == GroundType.Ground && this.groundTimer > 1) {
 
             ++ this.groundSlopeTimer;
-            if (Math.random() < SLOPE_PROB_FACTOR*this.groundSlopeTimer) {
+            if (Math.random() < Math.min(SLOPE_PROB_MAX, SLOPE_PROB_FACTOR*this.groundSlopeTimer)) {
 
                 dir = Math.random() < 0.5 ? 1 : -1;
                 if ( (this.activeHeight >= this.height - 1 && dir > 0) ||
@@ -114,6 +122,9 @@ export class Terrain {
                     dir *= -1;
 
                 this.activeHeight += dir;
+                this.activeHeight = Math.max(
+                    this.lastMushroomHeight + MUSHROOM_SAFE_HEIGHT, 
+                    this.activeHeight);
 
                 // Setting this to 0 might create double slopes, whcch
                 // are bad since they can "zig-zag" and thus look a bit
@@ -140,9 +151,10 @@ export class Terrain {
 
             this.mushroomTimer = sampleUniform(MUSHROOM_TIME_MIN, MUSHROOM_TIME_MAX);
 
-            this.mushrooms[this.tilePointer] = sampleUniform(
+            this.lastMushroomHeight = sampleUniform(
                 this.activeHeight - MUSHROOM_HEIGHT_MAX, 
                 this.activeHeight - MUSHROOM_HEIGHT_MIN);
+            this.mushrooms[this.tilePointer] = this.lastMushroomHeight;
             this.mushroomHats[this.tilePointer] = sampleUniform(
                 MUSHROOM_HAT_WIDTH_MIN, MUSHROOM_HAT_WIDTH_MAX);
         }
@@ -292,4 +304,27 @@ export class Terrain {
         this.drawMushrooms(canvas, bmpTerrain);
         this.drawGround(canvas, bmpTerrain);
     } 
+
+
+    public objectCollision(o : GameObject, event : ProgramEvent) : void {
+
+        if (!o.doesExist() || o.isDying())
+            return;
+
+        const px = (o.getPosition().x / 16) | 0;
+
+        let i : number;
+        let dx : number;
+        let dy : number;
+
+        for (let x = px - 1; x <= px + 1; ++ x) {
+
+            i = negMod(x + this.tilePointer, this.width);
+
+            dx = x*16 - (this.tileOffset | 0) + X_SHIFT*16;
+            dy = this.groundHeight[i]*16;
+
+            o.floorCollision(dx, dy, dx + 16, dy, event, 0.0, 1);
+        }
+    }
 }
