@@ -308,23 +308,35 @@ export class Terrain {
 
     public objectCollision(o : GameObject, event : ProgramEvent) : void {
 
+        const OFFSET = 2;
+
         if (!o.doesExist() || o.isDying())
             return;
 
-        const px = (o.getPosition().x / 16) | 0;
+        const px = ((o.getPosition().x / 16) | 0) - X_SHIFT;
 
         let i : number;
         let dx : number;
-        let dy : number;
 
-        for (let x = px - 1; x <= px + 1; ++ x) {
+        let y1 : number;
+        let y2 : number;
+
+        for (let x = px - OFFSET; x <= px + OFFSET; ++ x) {
 
             i = negMod(x + this.tilePointer, this.width);
 
-            dx = x*16 - (this.tileOffset | 0) + X_SHIFT*16;
-            dy = this.groundHeight[i]*16;
+            // Ground collision
+            if (this.groundType[i] != GroundType.Gap) {
 
-            o.floorCollision(dx, dy, dx + 16, dy, event, 0.0, 1);
+                dx = x*16 - this.tileOffset + X_SHIFT*16;
+                
+                y2 = this.getGroundHeight(i);
+                y1 = this.getGroundType(i - 1) != GroundType.Gap ? this.getGroundHeight(i - 1) : y2;
+
+                o.floorCollision(dx, y1*16, dx + 16, y2*16, event, 0.0, Number(y1 == y2));
+            }
+
+            // TODO: Possible mushroom collisions
         }
     }
 }

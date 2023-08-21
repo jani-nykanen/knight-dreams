@@ -117,7 +117,7 @@ export class GameObject {
             return this.floorCollision(x2, y2, x1, y1, event, speedCheckLimit);
 
         if (!this.exist || this.dying ||
-            this.speed.y < speedCheckLimit ||
+            this.speed.y <= speedCheckLimit ||
             this.pos.x + this.center.x + this.hitbox.x/2*horizontalHitboxFactor < x1 ||
             this.pos.x + this.center.x - this.hitbox.x/2*horizontalHitboxFactor > x2)
             return false;

@@ -63,7 +63,7 @@ export class Player extends GameObject {
             return;
 
         const dx = Math.round(this.pos.x) - 8;
-        const dy = Math.round(this.pos.y) - 8
+        const dy = Math.round(this.pos.y) - 7
 
         canvas.fillColor("#000000");
         canvas.fillRect(dx, dy, 16, 16);
