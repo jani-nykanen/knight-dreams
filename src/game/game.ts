@@ -29,7 +29,7 @@ export class Game implements Scene {
 
     public update(event : ProgramEvent) : void {
 
-        const globalSpeed = 1.0; // TEMP
+        const globalSpeed = 2.0; // TEMP
 
         this.terrain.update(globalSpeed, event);
 

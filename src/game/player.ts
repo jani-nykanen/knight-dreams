@@ -10,6 +10,9 @@ import { GameObject } from "./gameobject.js";
 
 export class Player extends GameObject {
 
+    private jumpTimer : number = 0;
+    private ledgeTimer : number = 0;
+    private canJump : boolean = false;
 
     private spr : Sprite;
 
@@ -30,6 +33,7 @@ export class Player extends GameObject {
 
         const BASE_SPEED = 1.5;
         const BASE_GRAVITY = 4.0;
+        const JUMP_TIME = 20;
 
         let dir = 0;
         if ((event.input.getAction("right") & InputState.DownOrPressed) != 0) {
@@ -43,17 +47,60 @@ export class Player extends GameObject {
 
         this.target.x = BASE_SPEED * dir;
         this.target.y = BASE_GRAVITY;
+
+        const jumpButtonState = event.input.getAction("jump");
+
+        if (this.ledgeTimer > 0 && jumpButtonState == InputState.Pressed) {
+
+            this.jumpTimer = JUMP_TIME;
+            this.canJump = false
+            this.ledgeTimer = 0;
+        }
+        else if ((jumpButtonState & InputState.DownOrPressed) == 0) {
+
+            this.jumpTimer = 0;
+        }
+    }
+
+
+    protected updateTimers(event : ProgramEvent) : void {
+
+        const JUMP_SPEED = 3.0;
+
+        if (this.jumpTimer > 0) {
+
+            this.speed.y = -JUMP_SPEED;
+            this.jumpTimer -= event.tick;
+        }
+
+        if (this.ledgeTimer > 0) {
+
+            this.ledgeTimer -= event.tick;
+        }
     }
 
 
     protected updateEvent(globalSpeed : number, event : ProgramEvent) : void {
         
         this.control(event);
+        this.updateTimers(event);
 
+        this.canJump = false;
+
+        // TEMP
         if (this.pos.y > event.screenHeight+16) {
 
             this.pos.y -= event.screenHeight;
         }
+    }
+
+
+    protected floorCollisionEvent(event: ProgramEvent): void {
+        
+        const LEDGE_TIME = 8;
+
+        this.canJump = true;
+        this.ledgeTimer = LEDGE_TIME;
     }
 
 

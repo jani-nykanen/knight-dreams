@@ -60,6 +60,9 @@ export class GameObject {
     }
 
 
+    protected floorCollisionEvent(event : ProgramEvent) : void {}
+
+
     public update(globalSpeed : number, event : ProgramEvent) : void {
 
         if (!this.exist) 
@@ -134,6 +137,8 @@ export class GameObject {
 
             this.pos.y = y0 - this.center.y - this.hitbox.y/2;
             this.speed.y = 0;
+
+            this.floorCollisionEvent(event);
 
             return true;
         }

@@ -44,10 +44,12 @@ export class Terrain {
 
     public objectCollision(o : GameObject, event : ProgramEvent) : void {
 
-        const OFFSET = 2;
-
         if (!o.doesExist() || o.isDying())
             return;
 
+        for (let g of this.groundLayers) {
+
+            g.objectCollision(o, event);
+        }
     }
 }

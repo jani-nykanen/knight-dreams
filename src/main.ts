@@ -14,6 +14,7 @@ const initialEvent = (event : ProgramEvent) : void => {
     event.input.addAction("up", ["ArrowUp"]);
     event.input.addAction("down", ["ArrowDown"]);
     event.input.addAction("select", ["Enter", "Space"]);
+    event.input.addAction("jump", ["ArrowUp"]);
 
     event.scenes.addScene("audiointro", new AudioIntro(event), false);
     event.scenes.addScene("game", new Game(event), true);
