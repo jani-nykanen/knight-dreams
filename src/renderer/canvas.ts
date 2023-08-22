@@ -237,12 +237,10 @@ export class Canvas {
     }
 
 
-    public drawScaledBitmap(bmp : Bitmap | undefined, 
+    public drawBitmap(bmp : Bitmap | undefined, 
         dx : number = 0, dy : number = 0, 
-        dw : number = (bmp?.width ?? 0),
-        dh : number = (bmp?.height ?? 0),
         sx : number = 0, sy : number = 0, 
-        sw = dw, sh = dh,
+        sw = bmp?.width ?? 0, sh = bmp?.height ?? 0,
         flip = Flip.None, angle : number | null = null,
         centerx = 0, centery = 0) : void {
 
@@ -261,8 +259,6 @@ export class Canvas {
         sh |= 0;
         dx |= 0;
         dy |= 0;
-        dw |= 0;
-        dh |= 0;
 
         if (saveState) {
 
@@ -291,24 +287,12 @@ export class Canvas {
             dy *= -1;
         }
 
-        c.drawImage(bmp, sx, sy, sw, sh, dx, dy, dw, dh);
+        c.drawImage(bmp, sx, sy, sw, sh, dx, dy, sw, sh);
 
         if (saveState) {
 
             c.restore();
         }
-    }
-
-
-    public drawBitmap(bmp : Bitmap | undefined, 
-        dx : number = 0, dy : number = 0, 
-        sx : number = 0, sy : number = 0, 
-        sw : number = (bmp?.width ?? 0),
-        sh : number = (bmp?.height ?? 0),
-        flip = Flip.None, angle : number | null = null,
-        centerx = 0, centery = 0) : void {
-
-        this.drawScaledBitmap(bmp, dx, dy, sw, sh, sx, sy, sw, sh, flip, angle, centerx, centery);
     }
 
 

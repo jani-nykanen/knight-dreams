@@ -110,30 +110,33 @@ export class GameObject {
     public doesOverlay = (o : GameObject) : boolean => this.doesOverlayRect(o.pos, o.center, o.hitbox);
 
 
-    public floorCollision(x1 : number, y1 : number, x2 : number, y2 : number, event : ProgramEvent,
-        speedCheckLimit = 0.0, horizontalHitboxFactor = 1, margin = 2) : boolean {
+    public floorCollision(x1 : number, y1 : number, x2 : number, y2 : number, 
+        globalSpeed : number, event : ProgramEvent,
+        leftMargin = 1, rightMargin = 1, 
+        topMargin = 2, bottomMargin = 8,
+        speedCheckLimit = 0.0) : boolean {
 
-        if (x1 == x2)
+        // The case x1 > x2 can be ignored since it never happens anyway
+        if (x1 >= x2)
             return false;
-
-        if (x1 > x2)
-            return this.floorCollision(x2, y2, x1, y1, event, speedCheckLimit);
 
         if (!this.exist || this.dying ||
             this.speed.y <= speedCheckLimit ||
-            this.pos.x + this.center.x + this.hitbox.x/2*horizontalHitboxFactor < x1 ||
-            this.pos.x + this.center.x - this.hitbox.x/2*horizontalHitboxFactor > x2)
+            this.pos.x + this.center.x + this.hitbox.x/2*leftMargin < x1 ||
+            this.pos.x + this.center.x - this.hitbox.x/2*rightMargin > x2)
             return false;
 
         const k = (y2 - y1) / (x2 - x1);
         const b = y1 - k*x1;
-        const y0 = this.pos.x * k + b;
+        const y0 = this.pos.x*k + b;
 
         const bottom = this.pos.y + this.center.y + this.hitbox.y/2;
 
-        // TODO: This makes no sense, recheck this
-        if (bottom < y0 + margin && 
-            bottom + Math.abs(this.speed.y)*event.tick >= y0 - margin) {
+        const hmod = Math.abs(k*(this.speed.x + globalSpeed))*event.tick;
+        const vmod = Math.abs(this.speed.y)*event.tick;
+
+        if (bottom < y0 + bottomMargin + vmod + hmod && 
+            bottom >= y0 - topMargin - hmod) {
 
             this.pos.y = y0 - this.center.y - this.hitbox.y/2;
             this.speed.y = 0;

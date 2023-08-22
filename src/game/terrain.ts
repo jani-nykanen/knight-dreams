@@ -17,8 +17,9 @@ export class Terrain {
 
         const baseWidth = (event.screenWidth / 16) | 0;
 
-        this.groundLayers = new Array<GroundLayer> (1);
-        this.groundLayers[0] = new GroundLayer(baseWidth);
+        this.groundLayers = new Array<GroundLayer> (2);
+        this.groundLayers[0] = new GroundLayer(baseWidth, 0);
+        this.groundLayers[1] = new GroundLayer(baseWidth, 8, this.groundLayers[0]);
     }
 
 
@@ -42,14 +43,14 @@ export class Terrain {
     } 
 
 
-    public objectCollision(o : GameObject, event : ProgramEvent) : void {
+    public objectCollision(o : GameObject, globalSpeed : number, event : ProgramEvent) : void {
 
         if (!o.doesExist() || o.isDying())
             return;
 
         for (let g of this.groundLayers) {
 
-            g.objectCollision(o, event);
+            g.objectCollision(o, globalSpeed, event);
         }
     }
 }

@@ -5,6 +5,7 @@ import { Canvas, TextAlign } from "../renderer/canvas.js";
 import { InputState } from "../core/input.js";
 import { Terrain } from "./terrain.js";
 import { Player } from "./player.js";
+import { Camera } from "./camera.js";
 
 
 export class Game implements Scene {
@@ -12,12 +13,14 @@ export class Game implements Scene {
 
     private terrain : Terrain;
     private player : Player;
+    private camera : Camera;
 
 
     constructor(event : ProgramEvent) {
 
         this.terrain = new Terrain(event);
         this.player = new Player(64, 64);
+        this.camera = new Camera();
     }
 
 
@@ -29,12 +32,14 @@ export class Game implements Scene {
 
     public update(event : ProgramEvent) : void {
 
-        const globalSpeed = 2.0; // TEMP
+        const globalSpeed = 1.0; // TEMP
 
         this.terrain.update(globalSpeed, event);
 
         this.player.update(globalSpeed, event);
-        this.terrain.objectCollision(this.player, event);
+        this.terrain.objectCollision(this.player, globalSpeed, event);
+
+        this.camera.followObject(this.player, event);
     }
     
     
@@ -45,8 +50,9 @@ export class Game implements Scene {
 
         // canvas.drawBitmap(assets.getBitmap("terrain"), 0, 0);
 
-        this.terrain.draw(canvas, assets);
+        this.camera.use(canvas);
 
+        this.terrain.draw(canvas, assets);
         this.player.draw(canvas, undefined);
     }
 

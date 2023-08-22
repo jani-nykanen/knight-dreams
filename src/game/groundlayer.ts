@@ -46,11 +46,13 @@ export class GroundLayer {
     private slopeDuration : number = 0;
     private slopeDir : SlopeDirection = SlopeDirection.None;
 
+    private baseShift : number = 0;
+
     private readonly width : number;
     private readonly ref : GroundLayer | undefined = undefined;
 
 
-    constructor(baseWidth : number, ref? : GroundLayer) {
+    constructor(baseWidth : number, baseShift = 0, ref : GroundLayer | undefined = undefined) {
 
         this.width = baseWidth + 4;
         this.ref = ref;
@@ -61,6 +63,8 @@ export class GroundLayer {
         this.directions = (new Array<number> (this.width)).fill(SlopeDirection.None);
 
         this.slopeWait = sampleUniform(SLOPE_WAIT_MIN, SLOPE_WAIT_MAX);
+
+        this.baseShift = baseShift;
     }
 
 
@@ -73,11 +77,19 @@ export class GroundLayer {
 
         const BRIDGE_PROB = 0.25;
 
-        const MIN_HEIGHT = 1;
-        const MAX_HEIGHT = 6;
+        const MIN_HEIGHT_DEFAULT = 1;
+        const HEIGHT_VARY = 5;
+        const REF_HEIGHT_DIFFERENCE = 2;
 
         const SLOPE_DURATION_MIN = 1;
         const SLOPE_DURATION_MAX = 2;
+
+        let minHeight = MIN_HEIGHT_DEFAULT;
+        if (this.ref !== undefined) {
+
+            minHeight += this.ref.getRecentHeight() + REF_HEIGHT_DIFFERENCE;
+        }
+        let maxHeight = minHeight + HEIGHT_VARY;
 
         let min : number;
         let max : number;
@@ -96,8 +108,8 @@ export class GroundLayer {
             this.slopeWait = (this.slopeDuration - 1) + sampleUniform(SLOPE_WAIT_MIN, SLOPE_WAIT_MAX);
 
             this.slopeDir = Math.random() < 0.5 ? SlopeDirection.Up : SlopeDirection.Down;
-            if ((this.activeHeight < MIN_HEIGHT + this.slopeDuration && this.slopeDir == SlopeDirection.Down) ||
-                (this.activeHeight > MAX_HEIGHT - this.slopeDuration && this.slopeDir == SlopeDirection.Up)) {
+            if ((this.activeHeight < minHeight + this.slopeDuration && this.slopeDir == SlopeDirection.Down) ||
+                (this.activeHeight > maxHeight - this.slopeDuration && this.slopeDir == SlopeDirection.Up)) {
 
                 this.slopeDir *= -1;
             }
@@ -113,8 +125,8 @@ export class GroundLayer {
 
                 if (this.activeType != TileType.Bridge) {
 
-                    min = Math.max(MIN_HEIGHT, this.activeHeight - GAP_JUMP_MAX);
-                    max = Math.min(MAX_HEIGHT, this.activeHeight + GAP_JUMP_MAX);
+                    min = Math.max(minHeight, this.activeHeight - GAP_JUMP_MAX);
+                    max = Math.min(maxHeight, this.activeHeight + GAP_JUMP_MAX);
 
                     this.activeHeight = sampleUniform(min, max);
                 }
@@ -159,37 +171,54 @@ export class GroundLayer {
         const h = (canvas.height / 16) | 0;
 
         let sx : number;
+        let left : boolean;
+        let right : boolean;
+
         for (let x = 0; x < this.width; ++ x) {
 
             i = (x + this.tilePointer) % this.width;
             dir = this.directions[i];
 
-            dx = x*16 - (this.tileOffset | 0) - X_SHIFT*16;
+            dx = x*16 - (this.tileOffset | 0) - X_SHIFT*16 + this.baseShift;
             dy = h - this.heights[i];
+
+            left = this.types[negMod(i - 1, this.width)] != TileType.Surface;
+            right = this.types[(i + 1) % this.width] != TileType.Surface;
 
             switch (this.types[i]) {
 
             case TileType.Surface:
 
                 sx = BASE_SRC_X[dir + 1];
-                if (this.types[negMod(i - 1, this.width)] != TileType.Surface)
+                if (left)
                     sx -= 16;
-                else if (this.types[(i + 1) % this.width] != TileType.Surface)
+                else if (right)
                     sx += 16;
 
                 canvas.drawBitmap(bmp, dx, dy*16 + YOFF[dir + 1]*16, sx, 0, 16, 32);
 
                 // TODO: Find a way to avoid having to compute the same shit twice...
                 sx = 32;
-                if (this.types[negMod(i - 1, this.width)] != TileType.Surface)
+                if (left)
                     sx -= 16;
-                else if (this.types[(i + 1) % this.width] != TileType.Surface)
+                else if (right)
                     sx += 16;
 
                 for (let y = dy + YOFF[dir + 1] + 2; y < h; ++ y) {
                     
                     canvas.drawBitmap(bmp, dx, y*16, sx, y == dy ? 0 : 16, 16, 16);
                 }
+
+                // Grass edges
+                if (left) {
+
+                    canvas.drawBitmap(bmp, dx - 16, dy*16, 0, 0, 16, 16);
+                }
+                if (right) {
+
+                    canvas.drawBitmap(bmp, dx + 16, dy*16, 64, 0, 16, 16);
+                }
+
                 break;
 
             case TileType.Bridge:
@@ -200,43 +229,61 @@ export class GroundLayer {
             default:
                 break;
             }
-
         }
     }
 
 
-    public objectCollision(o : GameObject, event : ProgramEvent) : void {
+    public objectCollision(o : GameObject, globalSpeed : number, event : ProgramEvent) : void {
 
         const OFFSET = 2;
 
         let i : number;
-        let j : number;
         let dx : number;
-
-        let y1 : number;
-        let y2 : number;
+        let dy : number;
 
         const h = (event.screenHeight / 16) | 0;
-        const px = ((o.getPosition().x / 16) | 0) + X_SHIFT;
+        const px = (( (o.getPosition().x - this.baseShift) / 16) | 0) + X_SHIFT;
+
+        let left = 0;
+        let right = 0;
 
         for (let x = px - OFFSET; x <= px + OFFSET; ++ x) {
 
             i = negMod(x + this.tilePointer, this.width);
-            j = negMod(i - 1, this.width);
 
             // Ground collision
-            if (this.types[i] != TileType.None) {
+            if (this.types[i] == TileType.None)
+                continue;
 
-                dx = x*16 - this.tileOffset - X_SHIFT*16;
-                
-                y2 = this.heights[i];
-                y1 = this.types[j] != TileType.None ? this.heights[j] : y2;
+            left = Number(this.types[negMod(i - 1, this.width)] == TileType.None);
+            right = Number(this.types[(i + 1) % this.width] == TileType.None);
 
-                y2 = h - y2;
-                y1 = h - y1;
+            dx = x*16 - this.tileOffset - X_SHIFT*16 + this.baseShift;
+            dy = (h - this.heights[i])*16;
 
-                o.floorCollision(dx, y1*16, dx + 16, y2*16, event, 0.0, Number(y1 == y2));
+            switch (this.directions[i]) {
+
+            case SlopeDirection.None:
+
+                o.floorCollision(dx, dy, dx + 16, dy, globalSpeed, event, left, right);
+                break;
+
+            case SlopeDirection.Up:
+
+                o.floorCollision(dx, dy + 16, dx + 16, dy, globalSpeed, event, 0, 0);
+                break;
+
+            case SlopeDirection.Down:
+
+                o.floorCollision(dx, dy - 16, dx + 16, dy, globalSpeed, event, 0, 0);
+                break;
+
+            default:
+                break;
             }
         }
     }
+
+
+    public getRecentHeight = () : number => this.heights[this.tilePointer];
 }

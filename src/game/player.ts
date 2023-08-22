@@ -80,10 +80,24 @@ export class Player extends GameObject {
     }
 
 
+    private checkScreenCollisions(event : ProgramEvent) : void {
+
+        if (this.pos.x - this.hitbox.x/2 <= 0) {
+
+            this.pos.x = this.hitbox.x/2;
+        }
+        else if (this.pos.x + this.hitbox.x/2 >= event.screenWidth) {
+
+            this.pos.x = event.screenWidth - this.hitbox.x/2;
+        }
+    }
+
+
     protected updateEvent(globalSpeed : number, event : ProgramEvent) : void {
         
         this.control(event);
         this.updateTimers(event);
+        this.checkScreenCollisions(event);
 
         this.canJump = false;
 
