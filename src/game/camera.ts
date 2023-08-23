@@ -17,9 +17,10 @@ export class Camera {
 
     public followObject(o : GameObject, event : ProgramEvent) : void {
 
-        const VERTICAL_DEADZONE = 32;
+        const VERTICAL_DEADZONE = 16;
+        const RANGE_OFFSET = 24;
 
-        const py = o.getPosition().y - event.screenHeight/2;
+        const py = o.getPosition().y - event.screenHeight/2 + RANGE_OFFSET;
 
         // TEMP
         let d = this.y - py;

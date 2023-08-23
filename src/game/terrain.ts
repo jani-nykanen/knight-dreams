@@ -18,16 +18,19 @@ export class Terrain {
         const baseWidth = (event.screenWidth / 16) | 0;
 
         this.groundLayers = new Array<GroundLayer> (2);
-        this.groundLayers[0] = new GroundLayer(baseWidth, 0);
-        this.groundLayers[1] = new GroundLayer(baseWidth, 8, this.groundLayers[0]);
+        this.groundLayers[0] = new GroundLayer(baseWidth, 2);
+        this.groundLayers[1] = new GroundLayer(baseWidth, 6, false, 8,
+             this.groundLayers[0], [4, 2, 2], [16, 6, 6]);
     }
 
 
     public update(globalSpeed : number, event : ProgramEvent) : void {
 
-        for (let g of this.groundLayers) {
-
-            g.update(globalSpeed, event);
+        // The reverse order seems to fix some bugs with the ground
+        // generator
+        for (let i = this.groundLayers.length-1; i >= 0; -- i) {
+            
+            this.groundLayers[i].update(globalSpeed, event);
         }
     }
 

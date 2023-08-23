@@ -48,32 +48,39 @@ export class GroundLayer {
 
     private baseShift : number = 0;
 
+    private typeWaitMin : number[];
+    private typeWaitMax : number[];
+
     private readonly width : number;
     private readonly ref : GroundLayer | undefined = undefined;
 
 
-    constructor(baseWidth : number, baseShift = 0, ref : GroundLayer | undefined = undefined) {
+    constructor(baseWidth : number, startHeight = 2, fillStart = true,
+        baseShift = 0, ref : GroundLayer | undefined = undefined,
+        typeWaitMin = [2, 2, 2], typeWaitMax = [4, 16, 6]) {
 
         this.width = baseWidth + 4;
         this.ref = ref;
 
-        this.activeHeight = 2;
+        this.activeHeight = startHeight;
+        this.activeType = Number(fillStart) as TileType;
+
         this.heights = (new Array<number> (this.width)).fill(this.activeHeight);
-        this.types = (new Array<number> (this.width)).fill(TileType.Surface);
+        this.types = (new Array<number> (this.width)).fill(this.activeType);
         this.directions = (new Array<number> (this.width)).fill(SlopeDirection.None);
 
         this.slopeWait = sampleUniform(SLOPE_WAIT_MIN, SLOPE_WAIT_MAX);
 
         this.baseShift = baseShift;
+
+        this.typeWaitMin = Array.from(typeWaitMin);
+        this.typeWaitMax = Array.from(typeWaitMax);
     }
 
 
     private spawnTile() : void {
 
         const GAP_JUMP_MAX = 2;
-
-        const TYPE_WAIT_MIN = [2, 2, 2];
-        const TYPE_WAIT_MAX = [4, 16, 6];
 
         const BRIDGE_PROB = 0.25;
 
@@ -91,9 +98,6 @@ export class GroundLayer {
         }
         let maxHeight = minHeight + HEIGHT_VARY;
 
-        let min : number;
-        let max : number;
-
         if (this.slopeDuration > 0) {
 
             if ((-- this.slopeDuration ) <= 0) {
@@ -108,8 +112,8 @@ export class GroundLayer {
             this.slopeWait = (this.slopeDuration - 1) + sampleUniform(SLOPE_WAIT_MIN, SLOPE_WAIT_MAX);
 
             this.slopeDir = Math.random() < 0.5 ? SlopeDirection.Up : SlopeDirection.Down;
-            if ((this.activeHeight < minHeight + this.slopeDuration && this.slopeDir == SlopeDirection.Down) ||
-                (this.activeHeight > maxHeight - this.slopeDuration && this.slopeDir == SlopeDirection.Up)) {
+            if ((this.activeHeight <= minHeight + this.slopeDuration && this.slopeDir == SlopeDirection.Down) ||
+                (this.activeHeight >= maxHeight - this.slopeDuration && this.slopeDir == SlopeDirection.Up)) {
 
                 this.slopeDir *= -1;
             }
@@ -118,6 +122,9 @@ export class GroundLayer {
             this.typeWait += this.slopeDuration;
         }
         this.activeHeight -= this.slopeDir;
+
+        let min : number;
+        let max : number;
 
         if (this.slopeDir == SlopeDirection.None && (-- this.typeWait) <= 0) {
 
@@ -136,7 +143,9 @@ export class GroundLayer {
 
                 this.activeType = Math.random() < BRIDGE_PROB ? TileType.Bridge : TileType.None;
             }
-            this.typeWait = sampleUniform(TYPE_WAIT_MIN[this.activeType], TYPE_WAIT_MAX[this.activeType]);
+            this.typeWait = sampleUniform(
+                this.typeWaitMin[this.activeType], 
+                this.typeWaitMax[this.activeType]);
         }
 
         this.heights[this.tilePointer] = this.activeHeight;
