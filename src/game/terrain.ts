@@ -26,11 +26,9 @@ export class Terrain {
 
     public update(globalSpeed : number, event : ProgramEvent) : void {
 
-        // The reverse order seems to fix some bugs with the ground
-        // generator
-        for (let i = this.groundLayers.length-1; i >= 0; -- i) {
+        for (let g of this.groundLayers) {
             
-            this.groundLayers[i].update(globalSpeed, event);
+            g.update(globalSpeed, event);
         }
     }
 

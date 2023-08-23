@@ -18,14 +18,15 @@ const PALETTE = [
     "aaaa55ff", // B Ugly yellow
     "aaaaaaff", // C Bright gray
     "555555ff", // D Dark gray
+    "aa5500ff", // E Brown
 
 ];
 
 
 const COLOR_MAP = [
 
-    "1540", "1540", "6670", undefined, "1670", "19A0", "19A0", "19A0",
-    "1670", "1670", "1B80", "1B80", "1670", "19A0", "19A0", "19A0",
+    "1540", "1540", "6670", "0880", "1E70", "19A0", "19A0", "19A0",
+    "1670", "1670", "1B80", "1B80", "1E70", "19A0", "19A0", "19A0",
     "1670", "1670", "1540", "1540", "1670", "1B80", "1B80", "1B80",
     "6660", "6660", "1540", "1540", "1670", "1670", "1C20", undefined,
 ];
@@ -151,6 +152,7 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
         // Bridge
         put(4, 0, 11 + i, 4);
         put(4, 1, 11 + i, 5);
+        put(3, 0, 11 + i, 4, 1, 5);
 
         // Spikes
         put(6, 3, 13 + i, 5);

@@ -292,5 +292,5 @@ export class GroundLayer {
     }
 
 
-    public getRecentHeight = () : number => this.activeHeight - this.slopeDir;
+    public getRecentHeight = () : number => this.activeHeight; // - this.slopeDir;
 }
