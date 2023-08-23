@@ -81,11 +81,10 @@ export class GroundLayer {
     private spawnTile() : void {
 
         const GAP_JUMP_MAX = 2;
-
         const BRIDGE_PROB = 0.25;
 
         const MIN_HEIGHT_DEFAULT = 1;
-        const HEIGHT_VARY = 5;
+        const HEIGHT_VARY = 4;
         const REF_HEIGHT_DIFFERENCE = 2;
 
         const SLOPE_DURATION_MIN = 1;
@@ -94,7 +93,7 @@ export class GroundLayer {
         let minHeight = MIN_HEIGHT_DEFAULT;
         if (this.ref !== undefined) {
 
-            minHeight += this.ref.getRecentHeight() + REF_HEIGHT_DIFFERENCE;
+            minHeight = this.ref.getRecentHeight() + REF_HEIGHT_DIFFERENCE;
         }
         let maxHeight = minHeight + HEIGHT_VARY;
 
@@ -106,9 +105,11 @@ export class GroundLayer {
             }
         }
 
-        if (this.activeType == TileType.Surface && (-- this.slopeWait) <= 0) {
+        if (this.activeType == TileType.Surface && 
+            this.typeWait >= 2 &&
+            (-- this.slopeWait) <= 0) {
 
-            this.slopeDuration = sampleUniform(SLOPE_DURATION_MIN, SLOPE_DURATION_MAX);
+            this.slopeDuration = Math.min(this.typeWait - 1, sampleUniform(SLOPE_DURATION_MIN, SLOPE_DURATION_MAX));
             this.slopeWait = (this.slopeDuration - 1) + sampleUniform(SLOPE_WAIT_MIN, SLOPE_WAIT_MAX);
 
             this.slopeDir = Math.random() < 0.5 ? SlopeDirection.Up : SlopeDirection.Down;
@@ -117,9 +118,6 @@ export class GroundLayer {
 
                 this.slopeDir *= -1;
             }
-
-            // To avoid platforms ending in a slope
-            this.typeWait += this.slopeDuration;
         }
         this.activeHeight -= this.slopeDir;
 
@@ -294,5 +292,5 @@ export class GroundLayer {
     }
 
 
-    public getRecentHeight = () : number => this.heights[this.tilePointer];
+    public getRecentHeight = () : number => this.activeHeight - this.slopeDir;
 }
