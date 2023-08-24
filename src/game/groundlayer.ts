@@ -237,7 +237,8 @@ export class GroundLayer {
             (this.activebackgroundType == TileType.None &&
             (this.gapTimer <= 2 || this.backgroundWait <= 2)))
             return;
-*/
+*/  
+        // TODO: Change order?
         if (this.backgroundWait <= 3 || (-- this.specialWait) > 0) 
             return;
 
@@ -252,9 +253,12 @@ export class GroundLayer {
         const height = groundHeight + sampleUniform(MIN_HEIGHT, MAX_HEIGHT);
         
         let type = weightedProbability(TYPE_PROB) as SpecialPlatformType;
-        if (height >= this.activeHeight + MUSHROOM_MAX_HEIGHT) {
+        if (width == MAX_WIDTH) {
 
-            console.log("Ooof");
+            type = SpecialPlatformType.Mushroom;
+        }
+        else if (height >= this.activeHeight + MUSHROOM_MAX_HEIGHT) {
+
             type = SpecialPlatformType.FloatingPlatform;
         }
 

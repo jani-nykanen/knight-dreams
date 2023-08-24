@@ -241,11 +241,10 @@ export class Canvas {
         dx : number = 0, dy : number = 0, 
         sx : number = 0, sy : number = 0, 
         sw = bmp?.width ?? 0, sh = bmp?.height ?? 0,
-        flip = Flip.None, angle : number | null = null,
-        centerx = 0, centery = 0) : void {
+        flip = Flip.None) : void {
 
         const c = this.ctx;
-        const saveState = flip != Flip.None || angle != null;
+        const saveState = flip != Flip.None;
 
         if (bmp === undefined)
             return;
@@ -263,15 +262,6 @@ export class Canvas {
         if (saveState) {
 
             c.save();
-        }
-
-        if (angle != null) {
-
-            c.translate(dx + centerx, dy + centery);
-            c.rotate(angle/180*Math.PI);
-
-            dx = -sw/2;
-            dy = -sh/2;
         }
 
         if ((flip & Flip.Horizontal) != 0) {

@@ -18,8 +18,11 @@ const PALETTE = [
     "aaaa55ff", // B Ugly yellow
     "aaaaaaff", // C Bright gray
     "555555ff", // D Dark gray
-    "aa5500ff", // E Brown
-
+    "aa5500ff", // E Brown,
+    "5555aaff", // F Darker purple
+    "aaaaffff", // G Lighter purple
+    "0055aaff", // H Darker blue,
+    "55aaffff", // I Lighter blue
 ];
 
 
@@ -29,6 +32,11 @@ const COLOR_MAP = [
     "1670", "1670", "1B80", "1B80", "1E70", "19A0", "19A0", "19A0",
     "1670", "1670", "1540", "1540", "1670", "1B80", "1B80", "1B80",
     "6660", "6660", "1540", "1540", "1670", "1670", "1C20", undefined,
+    "1FG0", "1FG0", "1FG0", "1FG0", "1FG0", "1FG0", "1DC0", "1DC0",
+    "1B80", "1B80", "1B80", "1B80", "1B80", "1B80", "1DC0", "1DC0",
+    "1B80", "1B80", "1B80", "1B80", undefined, undefined, undefined, undefined,
+    "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", undefined, 
+    "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", undefined, 
 ];
 
 
@@ -187,7 +195,6 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
         put(5 + i*2, 1, 13 + i*5, 1);
     }
 }
-
 
 
 const generate = (event : ProgramEvent) : void => {

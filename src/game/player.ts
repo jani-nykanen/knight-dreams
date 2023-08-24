@@ -95,11 +95,36 @@ export class Player extends GameObject {
     }
 
 
+    private animate(event : ProgramEvent) : void {
+
+        const WALK_SPEED = 4;
+        const JUMP_EPS = 0.5;
+
+        let frame : number;
+
+        if (this.canJump) {
+
+            this.spr.animate(0, 3, WALK_SPEED, event.tick);
+        }
+        else {
+
+            frame = 5;
+            if (this.speed.y < -JUMP_EPS)
+                frame = 4;
+            else if (this.speed.y > JUMP_EPS)
+                frame = 6;
+
+            this.spr.setFrame(frame);
+        }
+    }
+
+
     protected updateEvent(globalSpeed : number, event : ProgramEvent) : void {
         
         this.control(event);
         this.updateTimers(event);
         this.checkScreenCollisions(event);
+        this.animate(event);
 
         this.canJump = false;
 
@@ -122,16 +147,32 @@ export class Player extends GameObject {
 
     public draw(canvas : Canvas, bmp : Bitmap | undefined) : void {
 
+        const SX = [0, 1, 0, 2, 0, 0, 1];
+        const SY = [0, 0, 0, 0, 1, 0, 1];
+        const FEATHER = [0, 1, 0, 2, 1, 0, 2];
+        
         if (!this.exist)
             return;
 
         const dx = Math.round(this.pos.x) - 8;
-        const dy = Math.round(this.pos.y) - 7
+        const dy = Math.round(this.pos.y) - 7;
 
-        canvas.fillColor("#000000");
-        canvas.fillRect(dx, dy, 16, 16);
+        const sx = SX[this.spr.getFrame()]*16;
+        const sy = 40 + SY[this.spr.getFrame()]*8;
+        const fsx = FEATHER[this.spr.getFrame()]*16
 
-        canvas.fillColor("#ff0000");
-        canvas.fillRect(dx + 1, dy + 1, 14, 14);
+        // Body
+        canvas.drawBitmap(bmp, dx, dy, 48, 32, 16, 16);
+        // Legs
+        canvas.drawBitmap(bmp, dx, dy + 8, sx, sy, 16, 8);
+        // Feather
+        canvas.drawBitmap(bmp, dx, dy - 6, fsx, 32, 16, 8);
+
+        // Eyes
+        canvas.fillColor("#aa0000");
+        for (let i = 0; i < 2; ++ i) {
+
+            canvas.fillRect(dx + 7 + i*4, dy + 6, 1, 1);
+        }
     }
 }

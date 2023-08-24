@@ -38,4 +38,6 @@ export class Camera {
         canvas.moveTo(0, -Math.round(this.y));
     }
 
+
+    public getPosition = () : number => this.y;
 }
