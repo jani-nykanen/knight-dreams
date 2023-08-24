@@ -3,6 +3,7 @@ import { ExistingObject } from "./existingobject.js";
 import { ProgramEvent } from "../core/event.js";
 import { Canvas } from "../renderer/canvas.js";
 import { Bitmap } from "../renderer/bitmap.js";
+import { GameObject } from "./gameobject.js";
 
 
 export const enum SpecialPlatformType {
@@ -81,5 +82,14 @@ export class SpecialPlatform extends ExistingObject {
 
             canvas.drawBitmap(bmp, dx - 8, dy + y*16, 128, 32, 16, 16);
         }
+    }
+
+
+    public objectCollision(o : GameObject, globalSpeed : number, event : ProgramEvent) : void {
+
+        const y = event.screenHeight - this.pos.y;
+
+        o.floorCollision(this.pos.x - this.hatWidth*8, y, 
+            this.pos.x + this.hatWidth*8, y, globalSpeed, event);
     }
 }

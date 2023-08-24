@@ -20,7 +20,7 @@ const BACKGROUND_WAIT_MIN = [4, 2];
 const BACKGROUND_WAIT_MAX = [12, 6];
 
 const SPECIAL_WAIT_MIN = 4;
-const SPECIAL_WAIT_MAX = 12;
+const SPECIAL_WAIT_MAX = 16;
 
 
 const enum TileType {
@@ -60,6 +60,7 @@ export class GroundLayer {
     private backgroundWait : number = 0;
     private activebackgroundType : TileType = TileType.Surface;
     private activeBackgroundHeight : number = 0;
+    private gapTimer : number = 0;
 
     private tilePointer : number = 0;
     private tileOffset : number = 0;
@@ -129,7 +130,7 @@ export class GroundLayer {
         const TYPE_WAIT_MAX = [4, 16, 6]
 
         const GAP_JUMP_MAX = 2;
-        const BRIDGE_PROB = 0.25;
+        const BRIDGE_PROB = 0.33;
 
         let min : number;
         let max : number;
@@ -163,6 +164,11 @@ export class GroundLayer {
         const BACKGROUND_MIN_HEIGHT = 2;
         const BACKGROUND_MAX_HEIGHT = 4;
 
+        if (this.activebackgroundType == TileType.None) {
+
+            ++ this.gapTimer;
+        }
+
         if (this.slopeDir == SlopeDirection.None && (-- this.backgroundWait) <= 0) {
 
             this.activebackgroundType = (1 - this.activebackgroundType) as TileType;
@@ -174,6 +180,8 @@ export class GroundLayer {
             this.backgroundWait = sampleUniform(
                 BACKGROUND_WAIT_MIN[this.activebackgroundType as number], 
                 BACKGROUND_WAIT_MAX[this.activebackgroundType as number]);
+
+            this.gapTimer = 0;
         }
 
         this.activeBackgroundHeight -= this.slopeDir;
@@ -183,40 +191,40 @@ export class GroundLayer {
     }
 
 
-    private spawnSpecialPlatform(event : ProgramEvent) : void {
+    private spawnSpecialPlatform() : void {
 
         const MIN_HEIGHT = 3;
         const MAX_HEIGHT = 6;
 
-        if (this.typeWait <= 2 || this.backgroundWait <= 2)
+        const HAT_MIN_WIDTH = 3;
+        const HAT_MAX_HEIGHT = 5;
+
+        if (this.activebackgroundType == TileType.Surface ||
+            (this.activebackgroundType == TileType.None &&
+            (this.gapTimer <= 2 || this.backgroundWait <= 2)))
             return;
 
         if ((-- this.specialWait) > 0) 
             return;
 
-        let groundHeight = this.activeHeight;
-        if (this.activebackgroundType == TileType.Surface) {
-
-            groundHeight = this.activeBackgroundHeight;
-        }
-        
+        const maxWidth = Math.min(HAT_MAX_HEIGHT, this.gapTimer, this.backgroundWait);
+        const groundHeight = this.activeHeight;
         const height = groundHeight + sampleUniform(MIN_HEIGHT, MAX_HEIGHT);
-        const hatWidth = sampleUniform(3, 5);
-        const shift = this.activebackgroundType == TileType.None ? 0 : 8;
+        const hatWidth = sampleUniform(HAT_MIN_WIDTH, maxWidth);
 
         next<SpecialPlatform>(SpecialPlatform, this.specialPlatforms)
-            .spawn(event.screenWidth + hatWidth*8 + shift + this.tileOffset, height*16, hatWidth);
+            .spawn(this.width*16 - X_SHIFT*16 + (this.tileOffset % 16), height*16, hatWidth);
 
-        this.specialWait = sampleUniform(SPECIAL_WAIT_MIN, SPECIAL_WAIT_MAX);
+        this.specialWait = sampleUniform(hatWidth + 1, SPECIAL_WAIT_MAX);
     }
 
 
-    private spawnTile(event : ProgramEvent) : void {
+    private spawnTile() : void {
         
         this.updateSlope();
         this.updateType();
         this.updateBackground();
-        this.spawnSpecialPlatform(event);
+        this.spawnSpecialPlatform();
 
         this.heights[this.tilePointer] = this.activeHeight;
         this.types[this.tilePointer] = this.activeType;
@@ -233,7 +241,7 @@ export class GroundLayer {
 
         if ((this.tileOffset += globalSpeed*event.tick) >= 16) {
 
-            this.spawnTile(event);
+            this.spawnTile();
 
             this.tileOffset -= 16;
             this.tilePointer = (this.tilePointer + 1) % this.width;
@@ -387,7 +395,15 @@ export class GroundLayer {
 
     public objectCollision(o : GameObject, globalSpeed : number, event : ProgramEvent) : void {
 
+        if (!o.doesExist() || o.isDying())
+            return;
+
         this.objectLayerCollision(o, globalSpeed, this.backgroundHeight, this.backgroundType, this.directions, event, 8);
         this.objectLayerCollision(o, globalSpeed, this.heights, this.types, this.directions, event);
+
+        for (let p of this.specialPlatforms) {
+
+            p.objectCollision(o, globalSpeed, event);
+        }
     }
 }
