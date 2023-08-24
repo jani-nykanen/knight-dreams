@@ -26,6 +26,8 @@ export class Player extends GameObject {
         this.center = new Vector();
 
         this.spr = new Sprite();
+    
+        this.exist = true;
     }
 
 

@@ -2,6 +2,7 @@ import { Vector } from "../common/vector.js";
 import { ProgramEvent } from "../core/event.js";
 import { Bitmap } from "../renderer/bitmap.js";
 import { Canvas } from "../renderer/canvas.js";
+import { ExistingObject } from "./existingobject.js";
 
 
 export const updateSpeedAxis = (speed : number, target : number, step : number) : number => {
@@ -14,7 +15,7 @@ export const updateSpeedAxis = (speed : number, target : number, step : number) 
 }
 
 
-export class GameObject {
+export class GameObject extends ExistingObject {
 
 
     protected pos : Vector;
@@ -25,11 +26,12 @@ export class GameObject {
     protected hitbox : Vector;
     protected center : Vector;
 
-    protected exist : boolean = true;
     protected dying : boolean = false;
 
 
     constructor(x = 0, y = 0) {
+
+        super();
 
         this.pos = new Vector(x, y);
 
@@ -93,9 +95,7 @@ export class GameObject {
     }
     
 
-    public doesExist = () : boolean => this.exist;
     public isDying = () : boolean => this.dying;
-
     public getPosition = () : Vector => this.pos.clone();
 
 

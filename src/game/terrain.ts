@@ -7,29 +7,24 @@ import { GameObject } from "./gameobject.js";
 import { GroundLayer } from "./groundlayer.js";
 
 
+// TODO: Merge GroundLayer to Terrain
 export class Terrain {
 
 
-    private groundLayers : GroundLayer[];
+    private ground : GroundLayer;
 
 
     constructor(event : ProgramEvent) {
 
         const baseWidth = (event.screenWidth / 16) | 0;
 
-        this.groundLayers = new Array<GroundLayer> (2);
-        this.groundLayers[0] = new GroundLayer(baseWidth, 2);
-        this.groundLayers[1] = new GroundLayer(baseWidth, 6, false, 8,
-             this.groundLayers[0], [4, 2, 2], [16, 6, 6]);
+        this.ground = new GroundLayer(baseWidth);
     }
 
 
     public update(globalSpeed : number, event : ProgramEvent) : void {
 
-        for (let g of this.groundLayers) {
-            
-            g.update(globalSpeed, event);
-        }
+        this.ground.update(globalSpeed, event);
     }
 
 
@@ -37,10 +32,7 @@ export class Terrain {
 
         const bmpTerrain = assets.getBitmap("terrain");
 
-        for (let i = this.groundLayers.length-1; i >= 0; -- i) {
-            
-            this.groundLayers[i].draw(canvas, bmpTerrain);
-        }
+        this.ground.draw(canvas, bmpTerrain);
     } 
 
 
@@ -49,9 +41,6 @@ export class Terrain {
         if (!o.doesExist() || o.isDying())
             return;
 
-        for (let g of this.groundLayers) {
-
-            g.objectCollision(o, globalSpeed, event);
-        }
+        this.ground.objectCollision(o, globalSpeed, event);
     }
 }
