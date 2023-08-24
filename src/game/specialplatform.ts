@@ -17,7 +17,8 @@ export class SpecialPlatform extends ExistingObject {
 
 
     private pos : Vector;
-    private hatWidth : number = 0;
+    private width : number = 0;
+    private type : SpecialPlatformType = SpecialPlatformType.Mushroom;
 
 
     constructor() {
@@ -28,12 +29,18 @@ export class SpecialPlatform extends ExistingObject {
     }
 
 
-    public spawn(x : number, y : number, hatWidth : number, type = SpecialPlatformType.Mushroom) : void {
+    public spawn(x : number, y : number, width : number, type = SpecialPlatformType.Mushroom) : void {
+
+        if (type == SpecialPlatformType.Mushroom && width <= 2) {
+
+            type = SpecialPlatformType.FloatingPlatform;
+        }
 
         this.pos.x = x;
         this.pos.y = y;
 
-        this.hatWidth = hatWidth;
+        this.width = width;
+        this.type = type;
 
         this.exist = true;
     }
@@ -44,7 +51,7 @@ export class SpecialPlatform extends ExistingObject {
         if (!this.exist)
             return;
     
-        if ((this.pos.x -= globalSpeed*event.tick) <= -this.hatWidth*8) {
+        if ((this.pos.x -= globalSpeed*event.tick) <= -this.width*8) {
 
             this.exist = false;
         }
@@ -59,28 +66,59 @@ export class SpecialPlatform extends ExistingObject {
         const dx = Math.round(this.pos.x);
         const dy = canvas.height - this.pos.y;
 
-        // Hat
         let sx : number;
-        for (let j = 0; j < this.hatWidth; ++ j) {
 
-            sx = 128;
-            if (j == 0)
-                sx -= 16;
-            else if (j == this.hatWidth-1)
-                sx += 16;
+        switch (this.type) {
 
-            canvas.drawBitmap(bmp, dx - this.hatWidth*8 + j*16, dy, sx, 0, 16, 16);
-        }
+        // Mushroom
+        case SpecialPlatformType.Mushroom:
+            
+            // Hat
+            for (let j = 0; j < this.width; ++ j) {
 
-        // Ring
-        canvas.drawBitmap(bmp, dx - 12, dy + 16, 124, 16, 24, 16);
+                sx = 128;
+                if (j == 0)
+                    sx -= 16;
+                else if (j == this.width-1)
+                    sx += 16;
 
-        // Leg
-        const count = ((canvas.height - dy) / 16) | 0;
+                canvas.drawBitmap(bmp, dx - this.width*8 + j*16, dy, sx, 0, 16, 16);
+            }
+            // Ring
+            canvas.drawBitmap(bmp, dx - 12, dy + 16, 124, 16, 24, 16);
+            // Leg
+            const count = ((canvas.height - dy) / 16) | 0;
+            for (let y = 2; y < count; ++ y) {
 
-        for (let y = 2; y < count; ++ y) {
+                canvas.drawBitmap(bmp, dx - 8, dy + y*16, 128, 32, 16, 16);
+            }
+            break;
 
-            canvas.drawBitmap(bmp, dx - 8, dy + y*16, 128, 32, 16, 16);
+        // Floating platform
+        case SpecialPlatformType.FloatingPlatform:
+
+            // Soil edges
+            canvas.drawBitmap(bmp, dx - this.width*8 - 16, dy, 0, 32, 16, 16);
+            canvas.drawBitmap(bmp, dx + this.width*8, dy, 64, 32, 16, 16);
+
+            if (this.width == 1) {
+
+                canvas.drawBitmap(bmp, dx - 8, dy, 80, 32, 16, 16);
+                break;
+            }
+
+            for (let j = 0; j < this.width; ++ j) {
+
+                sx = 32;
+                if (j == 0)
+                    sx -= 16;
+                else if (j == this.width-1)
+                    sx += 16;
+
+                canvas.drawBitmap(bmp, dx - this.width*8 + j*16, dy, sx, 32, 16, 16);
+            }
+
+            break;
         }
     }
 
@@ -89,7 +127,7 @@ export class SpecialPlatform extends ExistingObject {
 
         const y = event.screenHeight - this.pos.y;
 
-        o.floorCollision(this.pos.x - this.hatWidth*8, y, 
-            this.pos.x + this.hatWidth*8, y, globalSpeed, event);
+        o.floorCollision(this.pos.x - this.width*8, y, 
+            this.pos.x + this.width*8, y, globalSpeed, event);
     }
 }

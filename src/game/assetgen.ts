@@ -32,7 +32,6 @@ const COLOR_MAP = [
 ];
 
 
-
 const generateFonts = (font : Bitmap | undefined, event : ProgramEvent) : void => {
 
     const fontWhite = BitmapGenerator.applyPalette(font,

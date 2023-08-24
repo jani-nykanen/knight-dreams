@@ -5,7 +5,7 @@ import { Bitmap } from "../renderer/bitmap.js";
 import { Canvas } from "../renderer/canvas.js";
 import { next } from "./existingobject.js";
 import { GameObject } from "./gameobject.js";
-import { SpecialPlatform } from "./specialplatform.js";
+import { SpecialPlatform, SpecialPlatformType } from "./specialplatform.js";
 
 
 const X_SHIFT = 2;
@@ -17,7 +17,7 @@ const MIN_HEIGHT = 1;
 const MAX_HEIGHT = 6;
 
 const BACKGROUND_WAIT_MIN = [4, 2];
-const BACKGROUND_WAIT_MAX = [12, 10];
+const BACKGROUND_WAIT_MAX = [16, 10];
 
 const SPECIAL_WAIT_MIN = 4;
 const SPECIAL_WAIT_MAX = 16;
@@ -60,7 +60,7 @@ export class GroundLayer {
 
     private backgroundWait : number = 0;
     private backgroundSlopeWait : number = 1;
-    private activebackgroundType : TileType = TileType.Surface;
+    private activebackgroundType : TileType = TileType.None;
     private activeBackgroundHeight : number = 4;
     private gapTimer : number = 0;
 
@@ -76,7 +76,7 @@ export class GroundLayer {
 
     constructor(baseWidth : number) {
 
-        this.width = baseWidth + 4;
+        this.width = baseWidth + 5;
 
         this.heights = (new Array<number> (this.width)).fill(this.activeHeight);
         this.types = (new Array<number> (this.width)).fill(this.activeType);
@@ -117,8 +117,6 @@ export class GroundLayer {
 
                 this.slopeDir *= -1;
             }
-
-            // ++ this.backgroundWait; ???
         }
         this.activeHeight -= this.slopeDir;
     }
@@ -181,18 +179,17 @@ export class GroundLayer {
                 heightDif <= 2) {
 
                 slope = SlopeDirection.Up;
-
-                ++ this.backgroundWait;
-                this.backgroundSlopeWait = 2;
             }
-            else if ((-- this.backgroundSlopeWait) <= 0 &&
-                Math.random() < SLOPE_PROB) {
+            else if ((-- this.backgroundSlopeWait) <= 0 && Math.random() < SLOPE_PROB) {
 
-                slope = Math.random() < 0.5 ? SlopeDirection.Down : SlopeDirection.Up;
+                slope = (-1 + Math.ceil(Math.random())*2) as SlopeDirection;
                 if (this.activeBackgroundHeight >= this.activeHeight + BACKGROUND_MAX_HEIGHT)
                     slope = SlopeDirection.Down;
-                else if (heightDif <= 2 || Math.random() < 0.5)
+                else if (heightDif <= 2)
                     slope = SlopeDirection.Up;
+            }
+
+            if (slope != SlopeDirection.None) {
 
                 ++ this.backgroundWait;
                 this.backgroundSlopeWait = 2;
@@ -227,28 +224,44 @@ export class GroundLayer {
     private spawnSpecialPlatform() : void {
 
         const MIN_HEIGHT = 3;
-        const MAX_HEIGHT = 6;
+        const MAX_HEIGHT = 5;
 
-        const HAT_MIN_WIDTH = 3;
-        const HAT_MAX_HEIGHT = 5;
+        const MIN_WIDTH = 1;
+        const MAX_WIDTH = 5;
 
+        const MUSHROOM_MAX_HEIGHT = 6;
+        
+        const TYPE_PROB = [0.75, 0.5];
+/*
         if (this.activebackgroundType == TileType.Surface ||
             (this.activebackgroundType == TileType.None &&
             (this.gapTimer <= 2 || this.backgroundWait <= 2)))
             return;
-
-        if ((-- this.specialWait) > 0) 
+*/
+        if (this.backgroundWait <= 3 || (-- this.specialWait) > 0) 
             return;
 
-        const maxWidth = Math.min(HAT_MAX_HEIGHT, this.gapTimer, this.backgroundWait);
-        const groundHeight = this.activeHeight;
+        const width = sampleUniform(MIN_WIDTH, MAX_WIDTH);
+
+        let groundHeight = this.activeHeight;
+        if (this.activebackgroundType != TileType.None ||
+            this.gapTimer <= width/2) {
+
+            groundHeight = this.activeBackgroundHeight;
+        }
         const height = groundHeight + sampleUniform(MIN_HEIGHT, MAX_HEIGHT);
-        const hatWidth = sampleUniform(HAT_MIN_WIDTH, maxWidth);
+        
+        let type = weightedProbability(TYPE_PROB) as SpecialPlatformType;
+        if (height >= this.activeHeight + MUSHROOM_MAX_HEIGHT) {
+
+            console.log("Ooof");
+            type = SpecialPlatformType.FloatingPlatform;
+        }
 
         next<SpecialPlatform>(SpecialPlatform, this.specialPlatforms)
-            .spawn(this.width*16 - X_SHIFT*16 + (this.tileOffset % 16), height*16, hatWidth);
+            .spawn(this.width*16 - X_SHIFT*16 + (this.tileOffset % 16), height*16, width, type);
 
-        this.specialWait = sampleUniform(hatWidth + 1, SPECIAL_WAIT_MAX);
+        this.specialWait = sampleUniform(width + 1, SPECIAL_WAIT_MAX);
     }
 
 
