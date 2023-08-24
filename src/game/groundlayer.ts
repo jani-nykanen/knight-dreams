@@ -17,7 +17,7 @@ const MIN_HEIGHT = 1;
 const MAX_HEIGHT = 6;
 
 const BACKGROUND_WAIT_MIN = [4, 2];
-const BACKGROUND_WAIT_MAX = [12, 6];
+const BACKGROUND_WAIT_MAX = [12, 10];
 
 const SPECIAL_WAIT_MIN = 4;
 const SPECIAL_WAIT_MAX = 16;
@@ -56,10 +56,12 @@ export class GroundLayer {
 
     private backgroundHeight : number[];
     private backgroundType : number[];
+    private backgroundSlope : number[];
 
     private backgroundWait : number = 0;
+    private backgroundSlopeWait : number = 1;
     private activebackgroundType : TileType = TileType.Surface;
-    private activeBackgroundHeight : number = 0;
+    private activeBackgroundHeight : number = 4;
     private gapTimer : number = 0;
 
     private tilePointer : number = 0;
@@ -82,6 +84,7 @@ export class GroundLayer {
 
         this.backgroundHeight = (new Array<number> (this.width)).fill(0);
         this.backgroundType = (new Array<number> (this.width)).fill(TileType.None);
+        this.backgroundSlope = (new Array<number> (this.width)).fill(SlopeDirection.None);
 
         this.specialPlatforms = new Array<SpecialPlatform> ();
         
@@ -96,12 +99,9 @@ export class GroundLayer {
         const SLOPE_DURATION_MIN = 1;
         const SLOPE_DURATION_MAX = 2;
 
-        if (this.slopeDuration > 0) {
+        if ((-- this.slopeDuration ) <= 0) {
 
-            if ((-- this.slopeDuration ) <= 0) {
-
-                this.slopeDir = SlopeDirection.None;
-            }
+            this.slopeDir = SlopeDirection.None;
         }
 
         if (this.activeType == TileType.Surface && 
@@ -118,7 +118,7 @@ export class GroundLayer {
                 this.slopeDir *= -1;
             }
 
-            ++ this.backgroundWait;
+            // ++ this.backgroundWait; ???
         }
         this.activeHeight -= this.slopeDir;
     }
@@ -164,30 +164,63 @@ export class GroundLayer {
         const BACKGROUND_MIN_HEIGHT = 2;
         const BACKGROUND_MAX_HEIGHT = 4;
 
+        const SLOPE_PROB = 0.25;
+
+        let slope = SlopeDirection.None;
+
+        const heightDif = Math.abs(this.activeHeight - this.activeBackgroundHeight);
+
         if (this.activebackgroundType == TileType.None) {
 
             ++ this.gapTimer;
         }
+        else if (this.backgroundWait > 1) {
 
-        if (this.slopeDir == SlopeDirection.None && (-- this.backgroundWait) <= 0) {
+            if (this.activeType == TileType.Surface &&
+                this.slopeDir == SlopeDirection.Up &&
+                heightDif <= 2) {
+
+                slope = SlopeDirection.Up;
+
+                ++ this.backgroundWait;
+                this.backgroundSlopeWait = 2;
+            }
+            else if ((-- this.backgroundSlopeWait) <= 0 &&
+                Math.random() < SLOPE_PROB) {
+
+                slope = Math.random() < 0.5 ? SlopeDirection.Down : SlopeDirection.Up;
+                if (this.activeBackgroundHeight >= this.activeHeight + BACKGROUND_MAX_HEIGHT)
+                    slope = SlopeDirection.Down;
+                else if (heightDif <= 2 || Math.random() < 0.5)
+                    slope = SlopeDirection.Up;
+
+                ++ this.backgroundWait;
+                this.backgroundSlopeWait = 2;
+            }
+        }
+
+        if ((-- this.backgroundWait) <= 0 && slope == SlopeDirection.None) {
 
             this.activebackgroundType = (1 - this.activebackgroundType) as TileType;
             if (this.activebackgroundType == TileType.Surface) {
 
                 this.activeBackgroundHeight = this.activeHeight + sampleUniform(BACKGROUND_MIN_HEIGHT, BACKGROUND_MAX_HEIGHT);
+                this.backgroundSlopeWait = 1;
             }
 
             this.backgroundWait = sampleUniform(
                 BACKGROUND_WAIT_MIN[this.activebackgroundType as number], 
                 BACKGROUND_WAIT_MAX[this.activebackgroundType as number]);
 
-            this.gapTimer = 0;
+            this.gapTimer = 0;   
+            slope = SlopeDirection.None;
         }
 
-        this.activeBackgroundHeight -= this.slopeDir;
+        this.activeBackgroundHeight -= slope;
         
         this.backgroundHeight[this.tilePointer] = this.activeBackgroundHeight;
         this.backgroundType[this.tilePointer] = this.activebackgroundType;
+        this.backgroundSlope[this.tilePointer] = slope;
     }
 
 
@@ -334,7 +367,7 @@ export class GroundLayer {
             o.draw(canvas, bmp);
         }
 
-        this.drawLayer(canvas, bmp, this.backgroundType, this.backgroundHeight, this.directions, 8);
+        this.drawLayer(canvas, bmp, this.backgroundType, this.backgroundHeight, this.backgroundSlope, 8);
         this.drawLayer(canvas, bmp, this.types, this.heights, this.directions);
     }
 
@@ -398,7 +431,7 @@ export class GroundLayer {
         if (!o.doesExist() || o.isDying())
             return;
 
-        this.objectLayerCollision(o, globalSpeed, this.backgroundHeight, this.backgroundType, this.directions, event, 8);
+        this.objectLayerCollision(o, globalSpeed, this.backgroundHeight, this.backgroundType, this.backgroundSlope, event, 8);
         this.objectLayerCollision(o, globalSpeed, this.heights, this.types, this.directions, event);
 
         for (let p of this.specialPlatforms) {
