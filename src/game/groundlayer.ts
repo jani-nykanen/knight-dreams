@@ -1,26 +1,20 @@
-import { clamp, negMod, sampleUniform, weightedProbability } from "../common/math.js";
-import { AssetManager } from "../core/assets.js";
+import { clamp, negMod, sampleUniform } from "../common/math.js";
 import { ProgramEvent } from "../core/event.js";
 import { Bitmap } from "../renderer/bitmap.js";
 import { Canvas } from "../renderer/canvas.js";
-import { next } from "./existingobject.js";
 import { GameObject } from "./gameobject.js";
-import { SpecialPlatform, SpecialPlatformType } from "./specialplatform.js";
 
 
-const X_SHIFT = 2;
+export const BASE_SHIFT_X = 2;
 
 const SLOPE_WAIT_MIN = 2;
 const SLOPE_WAIT_MAX = 12;
 
-const MIN_HEIGHT = 1;
-const MAX_HEIGHT = 6;
+const MIN_HEIGHT = [1, 2];
+const MAX_HEIGHT = [5, 4];
 
-const BACKGROUND_WAIT_MIN = [4, 2];
-const BACKGROUND_WAIT_MAX = [16, 10];
-
-const SPECIAL_WAIT_MIN = 4;
-const SPECIAL_WAIT_MAX = 16;
+const DECORATION_WAIT_MIN = 8;
+const DECORATION_WAIT_MAX = 16;
 
 
 const enum TileType {
@@ -39,58 +33,81 @@ const enum SlopeDirection {
 };
 
 
+const enum Decoration {
+
+    None = 0,
+    Palmtree = 1,
+};
+
+
+export const enum GroundLayerType {
+
+    Foreground = 0,
+    Background = 1
+};
+
+
 export class GroundLayer {
 
 
-    private heights : number[];
-    private directions : SlopeDirection[];
-    private types : TileType[];
+    private height : number[];
+    private slope : SlopeDirection[];
+    private type : TileType[];
+    private decorations : Decoration[];
 
-    private activeHeight : number = 2;
-    private activeType : TileType = TileType.Surface;
+    private activeHeight : number;
+    private activeType : TileType;
     private typeWait : number = 0;
-        
+
     private slopeWait : number;
     private slopeDuration : number = 0;
-    private slopeDir : SlopeDirection = SlopeDirection.None;
+    private activeSlope : SlopeDirection = SlopeDirection.None;
+    private lastSlope : SlopeDirection = SlopeDirection.None;
 
-    private backgroundHeight : number[];
-    private backgroundType : number[];
-    private backgroundSlope : number[];
-
-    private backgroundWait : number = 0;
-    private backgroundSlopeWait : number = 1;
-    private activebackgroundType : TileType = TileType.None;
-    private activeBackgroundHeight : number = 4;
     private gapTimer : number = 0;
 
-    private tilePointer : number = 0;
-    private tileOffset : number = 0;
+    private decorationWait : number = 0;
 
-    private specialPlatforms : SpecialPlatform[];
-    private specialWait : number = 0;
-    
+    private ref : GroundLayer | undefined = undefined;
 
+    private readonly layerType : GroundLayerType;
     private readonly width : number;
+    private readonly shift : number;
 
 
-    constructor(baseWidth : number) {
+    constructor(width : number, type : GroundLayerType, shift = 0) {
 
-        this.width = baseWidth + 5;
+        const INITIAL_HEIGHT = [2, 0];
+        const INITIAL_TYPE = [TileType.Surface, TileType.None];
 
-        this.heights = (new Array<number> (this.width)).fill(this.activeHeight);
-        this.types = (new Array<number> (this.width)).fill(this.activeType);
-        this.directions = (new Array<number> (this.width)).fill(SlopeDirection.None);
+        this.width = width;
 
-        this.backgroundHeight = (new Array<number> (this.width)).fill(0);
-        this.backgroundType = (new Array<number> (this.width)).fill(TileType.None);
-        this.backgroundSlope = (new Array<number> (this.width)).fill(SlopeDirection.None);
+        this.activeHeight = INITIAL_HEIGHT[type as number];
+        this.activeType = INITIAL_TYPE[type as number];
 
-        this.specialPlatforms = new Array<SpecialPlatform> ();
-        
+        this.height = (new Array<number> (this.width)).fill(this.activeHeight);
+        this.type = (new Array<TileType> (this.width)).fill(this.activeType);
+        this.slope = (new Array<SlopeDirection> (this.width)).fill(SlopeDirection.None);
+        this.decorations = (new Array<Decoration> (this.width)).fill(Decoration.None);
+
         this.slopeWait = sampleUniform(SLOPE_WAIT_MIN, SLOPE_WAIT_MAX);
-        this.backgroundWait = sampleUniform(BACKGROUND_WAIT_MIN[0], BACKGROUND_WAIT_MAX[0]);
-        this.specialWait = sampleUniform(SPECIAL_WAIT_MIN, SPECIAL_WAIT_MAX);
+        this.decorationWait = sampleUniform(DECORATION_WAIT_MIN, DECORATION_WAIT_MAX);
+    
+        this.layerType = type;
+        this.shift = shift;
+    }
+
+
+    private getHeightRange () : [number, number] {
+
+        let min = MIN_HEIGHT[this.layerType as number];
+        let max = MAX_HEIGHT[this.layerType as number];
+        if (this.layerType == GroundLayerType.Background) {
+
+            min += this.ref?.activeHeight ?? 0;
+            max += this.ref?.activeHeight ?? 0;
+        }
+        return [min, max];
     }
 
 
@@ -99,9 +116,34 @@ export class GroundLayer {
         const SLOPE_DURATION_MIN = 1;
         const SLOPE_DURATION_MAX = 2;
 
+        this.lastSlope = this.activeSlope;
+
         if ((-- this.slopeDuration ) <= 0) {
 
-            this.slopeDir = SlopeDirection.None;
+            this.activeSlope = SlopeDirection.None;
+        }
+
+        let nextHeight : number;
+        let dif : number;
+        const [min, max] = this.getHeightRange();
+
+        if (this.activeType == TileType.Surface && 
+            this.layerType == GroundLayerType.Background &&
+            this.ref !== undefined) {
+
+            dif = this.activeHeight - this.ref.activeHeight;
+            if ((this.ref.activeSlope == SlopeDirection.Up &&
+                dif <= 2) || dif <= 1) {
+
+                this.activeSlope = SlopeDirection.Up;
+                this.slopeWait = 2;
+                this.slopeDuration = 0;
+
+                this.activeHeight -= this.activeSlope;
+                ++ this.typeWait;
+
+                return;
+            }
         }
 
         if (this.activeType == TileType.Surface && 
@@ -111,228 +153,143 @@ export class GroundLayer {
             this.slopeDuration = Math.min(this.typeWait - 1, sampleUniform(SLOPE_DURATION_MIN, SLOPE_DURATION_MAX));
             this.slopeWait = (this.slopeDuration - 1) + sampleUniform(SLOPE_WAIT_MIN, SLOPE_WAIT_MAX);
 
-            this.slopeDir = Math.random() < 0.5 ? SlopeDirection.Up : SlopeDirection.Down;
-            if ((this.activeHeight <= MIN_HEIGHT + this.slopeDuration && this.slopeDir == SlopeDirection.Down) ||
-                (this.activeHeight >= MAX_HEIGHT - this.slopeDuration && this.slopeDir == SlopeDirection.Up)) {
+            this.activeSlope = Math.random() < 0.5 ? SlopeDirection.Up : SlopeDirection.Down;
 
-                this.slopeDir *= -1;
+            nextHeight = this.activeHeight - this.activeSlope*this.slopeDuration;
+            if (nextHeight != clamp(nextHeight, min, max)) {
+
+                this.activeSlope *= -1;
             }
+
+            ++ this.typeWait;
         }
-        this.activeHeight -= this.slopeDir;
+        this.activeHeight -= this.activeSlope;
     }
 
 
     private updateType() : void {
 
-        const TYPE_WAIT_MIN = [2, 2, 2];
-        const TYPE_WAIT_MAX = [4, 16, 6]
+        const TYPE_WAIT_MIN = [[2, 2, 2], [4, 2, 0]];
+        const TYPE_WAIT_MAX = [[4, 16, 6], [16, 10, 0]];
 
         const GAP_JUMP_MAX = 2;
-        const BRIDGE_PROB = 0.33;
+        const BRIDGE_PROB = [0.33, 0];
 
         let min : number;
         let max : number;
 
-        if (this.slopeDir == SlopeDirection.None && (-- this.typeWait) <= 0) {
+        const [minHeight, maxHeight] = this.getHeightRange();
+
+        if (this.activeType == TileType.None) {
+
+            ++ this.gapTimer;
+        }
+
+        if ((-- this.typeWait) <= 0 && this.lastSlope == SlopeDirection.None) {
 
             if (this.activeType != TileType.Surface) {
 
                 this.activeType = TileType.Surface;
+                if (this.layerType == GroundLayerType.Background) {
+
+                    this.activeHeight = sampleUniform(minHeight, maxHeight);
+                }
+
+                this.gapTimer = 0;
             }
             else {
 
-                this.activeType = Math.random() < BRIDGE_PROB ? TileType.Bridge : TileType.None;
-                if (this.activeType == TileType.None) {
+                this.activeType = Math.random() < BRIDGE_PROB[this.layerType as number] ? TileType.Bridge : TileType.None;
+                if (this.layerType == GroundLayerType.Foreground &&
+                    this.activeType == TileType.None) {
 
-                    min = Math.max(MIN_HEIGHT, this.activeHeight - GAP_JUMP_MAX);
-                    max = Math.min(MAX_HEIGHT, this.activeHeight + GAP_JUMP_MAX);
+                    min = Math.max(minHeight, this.activeHeight - GAP_JUMP_MAX);
+                    max = Math.min(maxHeight, this.activeHeight + GAP_JUMP_MAX);
 
                     this.activeHeight = sampleUniform(min, max);
+
+                    // Try to avoid cases where the background layer goes behind
+                    // the front layer
+                    /*
+                    if (this.ref !== undefined) {
+
+                        if (this.ref.activeHeight <= this.activeHeight) {
+
+                            if ((-- this.activeHeight) < MIN_HEIGHT[0]) {
+
+                                this.activeHeight = MIN_HEIGHT[0];
+                                ++ this.typeWait;
+                                return;
+                            }
+                        }
+                    }
+                    */
                 }
             }
             this.typeWait = sampleUniform(
-                TYPE_WAIT_MIN[this.activeType], 
-                TYPE_WAIT_MAX[this.activeType]);
+                TYPE_WAIT_MIN[this.layerType as number][this.activeType], 
+                TYPE_WAIT_MAX[this.layerType as number][this.activeType]);
         }
     }
 
 
-    private updateBackground() : void {
+    private updateDecorations(tilePointer : number) : boolean {
 
-        const BACKGROUND_MIN_HEIGHT = 2;
-        const BACKGROUND_MAX_HEIGHT = 4;
+        if ((-- this.decorationWait) > 0)
+            return false;
 
-        const SLOPE_PROB = 0.25;
+        if (this.activeType != TileType.Surface ||
+            this.activeSlope != SlopeDirection.None ||
+            (this.layerType == GroundLayerType.Foreground &&
+             this.ref?.activeType !== TileType.None))
+            return false;
 
-        let slope = SlopeDirection.None;
+        this.decorations[tilePointer] = Decoration.Palmtree;
+        this.decorationWait = sampleUniform(DECORATION_WAIT_MIN, DECORATION_WAIT_MAX);
 
-        const heightDif = Math.abs(this.activeHeight - this.activeBackgroundHeight);
-
-        if (this.activebackgroundType == TileType.None) {
-
-            ++ this.gapTimer;
-        }
-        else if (this.backgroundWait > 1) {
-
-            if (this.activeType == TileType.Surface &&
-                this.slopeDir == SlopeDirection.Up &&
-                heightDif <= 2) {
-
-                slope = SlopeDirection.Up;
-            }
-            else if ((-- this.backgroundSlopeWait) <= 0 && Math.random() < SLOPE_PROB) {
-
-                slope = (-1 + Math.ceil(Math.random())*2) as SlopeDirection;
-                if (this.activeBackgroundHeight >= this.activeHeight + BACKGROUND_MAX_HEIGHT)
-                    slope = SlopeDirection.Down;
-                else if (heightDif <= 2)
-                    slope = SlopeDirection.Up;
-            }
-
-            if (slope != SlopeDirection.None) {
-
-                ++ this.backgroundWait;
-                this.backgroundSlopeWait = 2;
-            }
-        }
-
-        if ((-- this.backgroundWait) <= 0 && slope == SlopeDirection.None) {
-
-            this.activebackgroundType = (1 - this.activebackgroundType) as TileType;
-            if (this.activebackgroundType == TileType.Surface) {
-
-                this.activeBackgroundHeight = this.activeHeight + sampleUniform(BACKGROUND_MIN_HEIGHT, BACKGROUND_MAX_HEIGHT);
-                this.backgroundSlopeWait = 1;
-            }
-
-            this.backgroundWait = sampleUniform(
-                BACKGROUND_WAIT_MIN[this.activebackgroundType as number], 
-                BACKGROUND_WAIT_MAX[this.activebackgroundType as number]);
-
-            this.gapTimer = 0;   
-            slope = SlopeDirection.None;
-        }
-
-        this.activeBackgroundHeight -= slope;
-        
-        this.backgroundHeight[this.tilePointer] = this.activeBackgroundHeight;
-        this.backgroundType[this.tilePointer] = this.activebackgroundType;
-        this.backgroundSlope[this.tilePointer] = slope;
+        return true;
     }
 
 
-    private spawnSpecialPlatform() : void {
+    private drawDecoration(canvas : Canvas, bmp : Bitmap | undefined,
+        decoration : Decoration, dx : number, dy : number) : void {
 
-        //
-        // TODO: This is a horrible mess
-        //
+        switch (decoration) {
 
-        const MIN_HEIGHT = 3;
-        const MAX_HEIGHT = 5;
+        case Decoration.Palmtree:
 
-        const MIN_WIDTH = 1;
-        const MAX_WIDTH = 5;
+            canvas.drawBitmap(bmp, dx - 8, dy - 33, 160, 0, 32, 33)
+            break;
 
-        const MUSHROOM_MAX_HEIGHT = 6;
-        
-        const TYPE_PROB = [0.40, 0.30, 0.30];
-/*
-        if (this.activebackgroundType == TileType.Surface ||
-            (this.activebackgroundType == TileType.None &&
-            (this.gapTimer <= 2 || this.backgroundWait <= 2)))
-            return;
-*/  
-        // TODO: Change order?
-        if (this.backgroundWait <= 3 || (-- this.specialWait) > 0) 
-            return;
-
-        let width = sampleUniform(MIN_WIDTH, MAX_WIDTH);
-
-        let groundHeight = this.activeHeight;
-        if (this.activebackgroundType != TileType.None ||
-            this.gapTimer <= width/2) {
-
-            groundHeight = this.activeBackgroundHeight;
+        default:
+            break;
         }
-
-        let height = groundHeight + sampleUniform(MIN_HEIGHT, MAX_HEIGHT);
-        let distanceFromGround = 0;
-        
-        let type = weightedProbability(TYPE_PROB) as SpecialPlatformType;
-
-        const hasGround = this.activebackgroundType == TileType.Surface ||
-            (this.activeType == TileType.Surface && this.slopeDir == SlopeDirection.None);
-        const tooHigh = height >= this.activeHeight + MUSHROOM_MAX_HEIGHT;
-
-        // Check if the type is compatible with the terrain
-        if (type == SpecialPlatformType.PalmTree && !hasGround) {
-
-            type = tooHigh ? SpecialPlatformType.FloatingPlatform :  SpecialPlatformType.Mushroom;
-        }
-        else if (type == SpecialPlatformType.PalmTree && hasGround) {
-
-            distanceFromGround = sampleUniform(2, 3);
-            if (this.activebackgroundType == TileType.None) {
-                height = this.activeHeight + distanceFromGround;
-                ++ this.slopeWait;
-            }
-            else {
-                
-                height = this.activeBackgroundHeight + distanceFromGround;
-                this.backgroundSlopeWait = 2; 
-            }
-        }
-        else if (width == MAX_WIDTH) {
-
-            type = SpecialPlatformType.Mushroom;
-        }
-        else if (tooHigh) {
-
-            type = SpecialPlatformType.FloatingPlatform;
-        }
-
-
-        next<SpecialPlatform>(SpecialPlatform, this.specialPlatforms)
-            .spawn(this.width*16 - X_SHIFT*16 + (this.tileOffset % 16), 
-                height*16, width, type, distanceFromGround);
-
-        this.specialWait = sampleUniform(width + 1, SPECIAL_WAIT_MAX);
     }
 
 
-    private spawnTile() : void {
-        
+    public update(tilePointer : number) : void {
+
         this.updateSlope();
         this.updateType();
-        this.spawnSpecialPlatform();
-        this.updateBackground();
-        
-        this.heights[this.tilePointer] = this.activeHeight;
-        this.types[this.tilePointer] = this.activeType;
-        this.directions[this.tilePointer] = this.slopeDir; 
+        if (!this.updateDecorations(tilePointer)) {
+
+            this.decorations[tilePointer] = Decoration.None;
+        }
+
+        this.height[tilePointer] = this.activeHeight;
+        this.type[tilePointer] = this.activeType;
+        this.slope[tilePointer] = this.activeSlope; 
     }
 
 
-    public update(globalSpeed : number, event : ProgramEvent) : void {
+    public setReferenceLayer(ref : GroundLayer) : void {
 
-        for (let o of this.specialPlatforms) {
-
-            o.update(globalSpeed, event);
-        }
-
-        if ((this.tileOffset += globalSpeed*event.tick) >= 16) {
-
-            this.spawnTile();
-
-            this.tileOffset -= 16;
-            this.tilePointer = (this.tilePointer + 1) % this.width;
-        }
+        this.ref = ref;
     }
 
 
-    private drawLayer(canvas : Canvas, bmp : Bitmap | undefined,
-        types : TileType[], heights : number[], directions : SlopeDirection[],
-        xshift = 0) : void {
+    public draw(canvas : Canvas, bmp : Bitmap | undefined, 
+        tilePointer : number, tileOffset : number) : void {
 
         const BRIDGE_Y_OFF = -2;
         const BASE_SRC_X = [80, 32, 96];
@@ -351,16 +308,21 @@ export class GroundLayer {
 
         for (let x = 0; x < this.width; ++ x) {
 
-            i = (x + this.tilePointer) % this.width;
-            dir = directions[i];
+            i = (x + tilePointer) % this.width;
+            dir = this.slope[i];
 
-            dx = x*16 - (this.tileOffset | 0) - X_SHIFT*16 + xshift;
-            dy = h - heights[i];
+            dx = x*16 - (tileOffset | 0) - BASE_SHIFT_X*16 + this.shift;
+            dy = h - this.height[i];
 
-            left = types[negMod(i - 1, this.width)] != TileType.Surface;
-            right = types[(i + 1) % this.width] != TileType.Surface;
+            left = this.type[negMod(i - 1, this.width)] != TileType.Surface;
+            right = this.type[(i + 1) % this.width] != TileType.Surface;
 
-            switch (types[i]) {
+            if (this.decorations[i] != Decoration.None) {
+
+                this.drawDecoration(canvas, bmp, this.decorations[i], dx, dy*16);
+            }
+
+            switch (this.type[i]) {
 
             case TileType.Surface:
 
@@ -408,21 +370,8 @@ export class GroundLayer {
     }
 
 
-    public draw(canvas : Canvas, bmp : Bitmap | undefined) : void {
-
-        for (let o of this.specialPlatforms) {
-
-            o.draw(canvas, bmp);
-        }
-
-        this.drawLayer(canvas, bmp, this.backgroundType, this.backgroundHeight, this.backgroundSlope, 8);
-        this.drawLayer(canvas, bmp, this.types, this.heights, this.directions);
-    }
-
-
-    public objectLayerCollision(o : GameObject, globalSpeed : number, 
-        heights : number[], types : TileType[], directions : SlopeDirection[],
-        event : ProgramEvent, shift = 0) : void {
+    public objectCollision(o : GameObject, globalSpeed : number, 
+        tilePointer : number, tileOffset : number, event : ProgramEvent,) : void {
 
         const OFFSET = 2;
 
@@ -431,26 +380,26 @@ export class GroundLayer {
         let dy : number;
 
         const h = (event.screenHeight / 16) | 0;
-        const px = (( (o.getPosition().x - shift) / 16) | 0) + X_SHIFT;
+        const px = (( (o.getPosition().x - this.shift) / 16) | 0) + BASE_SHIFT_X;
 
         let left = 0;
         let right = 0;
 
         for (let x = px - OFFSET; x <= px + OFFSET; ++ x) {
 
-            i = negMod(x + this.tilePointer, this.width);
+            i = negMod(x + tilePointer, this.width);
 
             // Ground collision
-            if (types[i] == TileType.None)
+            if (this.type[i] == TileType.None)
                 continue;
 
-            left = Number(types[negMod(i - 1, this.width)] == TileType.None);
-            right = Number(types[(i + 1) % this.width] == TileType.None);
+            left = Number(this.type[negMod(i - 1, this.width)] == TileType.None);
+            right = Number(this.type[(i + 1) % this.width] == TileType.None);
 
-            dx = x*16 - this.tileOffset - X_SHIFT*16 + shift;
-            dy = (h - heights[i])*16;
+            dx = x*16 - tileOffset - BASE_SHIFT_X*16 + this.shift;
+            dy = (h - this.height[i])*16;
 
-            switch (directions[i]) {
+            switch (this.slope[i]) {
 
             case SlopeDirection.None:
 
@@ -474,17 +423,9 @@ export class GroundLayer {
     }
 
 
-    public objectCollision(o : GameObject, globalSpeed : number, event : ProgramEvent) : void {
+    public getHeight = () : number => this.activeHeight;
+    public hasGap = () : boolean => this.activeType == TileType.None;
 
-        if (!o.doesExist() || o.isDying())
-            return;
-
-        this.objectLayerCollision(o, globalSpeed, this.backgroundHeight, this.backgroundType, this.backgroundSlope, event, 8);
-        this.objectLayerCollision(o, globalSpeed, this.heights, this.types, this.directions, event);
-
-        for (let p of this.specialPlatforms) {
-
-            p.objectCollision(o, globalSpeed, event);
-        }
-    }
+    
+    public getDistanceFromPlatform = () : number => Math.min(this.gapTimer, this.typeWait);
 }
