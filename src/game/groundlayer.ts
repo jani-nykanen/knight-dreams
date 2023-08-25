@@ -223,6 +223,10 @@ export class GroundLayer {
 
     private spawnSpecialPlatform() : void {
 
+        //
+        // TODO: This is a horrible mess
+        //
+
         const MIN_HEIGHT = 3;
         const MAX_HEIGHT = 5;
 
@@ -231,7 +235,7 @@ export class GroundLayer {
 
         const MUSHROOM_MAX_HEIGHT = 6;
         
-        const TYPE_PROB = [0.75, 0.5];
+        const TYPE_PROB = [0.40, 0.30, 0.30];
 /*
         if (this.activebackgroundType == TileType.Surface ||
             (this.activebackgroundType == TileType.None &&
@@ -242,7 +246,7 @@ export class GroundLayer {
         if (this.backgroundWait <= 3 || (-- this.specialWait) > 0) 
             return;
 
-        const width = sampleUniform(MIN_WIDTH, MAX_WIDTH);
+        let width = sampleUniform(MIN_WIDTH, MAX_WIDTH);
 
         let groundHeight = this.activeHeight;
         if (this.activebackgroundType != TileType.None ||
@@ -250,20 +254,47 @@ export class GroundLayer {
 
             groundHeight = this.activeBackgroundHeight;
         }
-        const height = groundHeight + sampleUniform(MIN_HEIGHT, MAX_HEIGHT);
+
+        let height = groundHeight + sampleUniform(MIN_HEIGHT, MAX_HEIGHT);
+        let distanceFromGround = 0;
         
         let type = weightedProbability(TYPE_PROB) as SpecialPlatformType;
-        if (width == MAX_WIDTH) {
+
+        const hasGround = this.activebackgroundType == TileType.Surface ||
+            (this.activeType == TileType.Surface && this.slopeDir == SlopeDirection.None);
+        const tooHigh = height >= this.activeHeight + MUSHROOM_MAX_HEIGHT;
+
+        // Check if the type is compatible with the terrain
+        if (type == SpecialPlatformType.PalmTree && !hasGround) {
+
+            type = tooHigh ? SpecialPlatformType.FloatingPlatform :  SpecialPlatformType.Mushroom;
+        }
+        else if (type == SpecialPlatformType.PalmTree && hasGround) {
+
+            distanceFromGround = sampleUniform(2, 3);
+            if (this.activebackgroundType == TileType.None) {
+                height = this.activeHeight + distanceFromGround;
+                ++ this.slopeWait;
+            }
+            else {
+                
+                height = this.activeBackgroundHeight + distanceFromGround;
+                this.backgroundSlopeWait = 2; 
+            }
+        }
+        else if (width == MAX_WIDTH) {
 
             type = SpecialPlatformType.Mushroom;
         }
-        else if (height >= this.activeHeight + MUSHROOM_MAX_HEIGHT) {
+        else if (tooHigh) {
 
             type = SpecialPlatformType.FloatingPlatform;
         }
 
+
         next<SpecialPlatform>(SpecialPlatform, this.specialPlatforms)
-            .spawn(this.width*16 - X_SHIFT*16 + (this.tileOffset % 16), height*16, width, type);
+            .spawn(this.width*16 - X_SHIFT*16 + (this.tileOffset % 16), 
+                height*16, width, type, distanceFromGround);
 
         this.specialWait = sampleUniform(width + 1, SPECIAL_WAIT_MAX);
     }
@@ -273,9 +304,9 @@ export class GroundLayer {
         
         this.updateSlope();
         this.updateType();
-        this.updateBackground();
         this.spawnSpecialPlatform();
-
+        this.updateBackground();
+        
         this.heights[this.tilePointer] = this.activeHeight;
         this.types[this.tilePointer] = this.activeType;
         this.directions[this.tilePointer] = this.slopeDir; 

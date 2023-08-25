@@ -23,6 +23,7 @@ const PALETTE = [
     "aaaaffff", // G Lighter purple
     "0055aaff", // H Darker blue,
     "55aaffff", // I Lighter blue
+    "005500ff", // J Dark green
 ];
 
 
@@ -35,8 +36,9 @@ const COLOR_MAP = [
     "1FG0", "1FG0", "1FG0", "1FG0", "1FG0", "1FG0", "1DC0", "1DC0",
     "1B80", "1B80", "1B80", "1B80", "1B80", "1B80", "1DC0", "1DC0",
     "1B80", "1B80", "1B80", "1B80", undefined, undefined, undefined, undefined,
-    "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", undefined, 
-    "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", undefined, 
+    "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", "1780", 
+    "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", "1780", 
+    "1J50", "1J50", "1J50", "1J50", "0400", "0400", "0400", "0400",
 ];
 
 
@@ -166,6 +168,27 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
     }
 
 
+
+    //
+    // Palm tree
+    //
+
+    // Leaves
+    for (let i = 0; i < 2; ++ i) {
+
+        c.drawImage(base, i*32, 72, 32, 8, 152, 1, 32, 8);
+        // Missing pixels
+        c.fillRect(152 + 8 + i*11, 0, 5, 1);
+    }
+    
+    // Trunk
+    for (let i = 0; i < 2; ++ i) {
+
+        put(7, 7, 20, 1 + i, 4, 1);
+    }
+    put(7, 8, 20, 3, 4, 1);
+    
+
     //
     // Mushrooms
     //
@@ -194,6 +217,7 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
         put(5 + i*2, 0, 13 + i*5, 0);
         put(5 + i*2, 1, 13 + i*5, 1);
     }
+
 }
 
 

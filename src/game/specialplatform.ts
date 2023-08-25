@@ -9,7 +9,8 @@ import { GameObject } from "./gameobject.js";
 export const enum SpecialPlatformType {
 
     Mushroom = 0,
-    FloatingPlatform = 1
+    FloatingPlatform = 1,
+    PalmTree = 2,
 };
 
 
@@ -18,6 +19,7 @@ export class SpecialPlatform extends ExistingObject {
 
     private pos : Vector;
     private width : number = 0;
+    private height : number = 0;
     private type : SpecialPlatformType = SpecialPlatformType.Mushroom;
 
 
@@ -29,11 +31,16 @@ export class SpecialPlatform extends ExistingObject {
     }
 
 
-    public spawn(x : number, y : number, width : number, type = SpecialPlatformType.Mushroom) : void {
+    public spawn(x : number, y : number, width : number, type : SpecialPlatformType, height = 0) : void {
 
         if (type == SpecialPlatformType.Mushroom && width <= 2) {
 
             type = SpecialPlatformType.FloatingPlatform;
+        }
+        else if (type == SpecialPlatformType.PalmTree) {
+
+            width = 2;
+            this.height = height;
         }
 
         this.pos.x = x;
@@ -65,6 +72,7 @@ export class SpecialPlatform extends ExistingObject {
 
         const dx = Math.round(this.pos.x);
         const dy = canvas.height - this.pos.y;
+        const mushroomHeight = ((canvas.height - dy) / 16) | 0;
 
         let sx : number;
 
@@ -87,8 +95,7 @@ export class SpecialPlatform extends ExistingObject {
             // Ring
             canvas.drawBitmap(bmp, dx - 12, dy + 16, 124, 16, 24, 16);
             // Leg
-            const count = ((canvas.height - dy) / 16) | 0;
-            for (let y = 2; y < count; ++ y) {
+            for (let y = 2; y < mushroomHeight; ++ y) {
 
                 canvas.drawBitmap(bmp, dx - 8, dy + y*16, 128, 32, 16, 16);
             }
@@ -118,6 +125,23 @@ export class SpecialPlatform extends ExistingObject {
                 canvas.drawBitmap(bmp, dx - this.width*8 + j*16, dy, sx, 32, 16, 16);
             }
 
+            break;
+
+        // Palm tree
+        case SpecialPlatformType.PalmTree:
+
+            // Leaves
+            canvas.drawBitmap(bmp, dx - 16, dy - 1, 160, 0, 32, 9);
+            // Trunk
+            for (let j = 0; j < this.height - 1; ++ j) {
+
+                canvas.drawBitmap(bmp, dx - 8, dy + 8 + j*16, 168, 9, 16, 16);
+            }
+            canvas.drawBitmap(bmp, dx - 8, dy + 8 + (this.height - 1)*16, 168, 25, 16, 16);
+
+            break;
+
+        default:
             break;
         }
     }

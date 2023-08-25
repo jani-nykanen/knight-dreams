@@ -93,7 +93,7 @@ export class Game implements Scene {
 
         this.drawBackground(canvas, bmpBase);
 
-        // canvas.drawBitmap(assets.getBitmap("terrain"), 0, 0);
+        // canvas.drawBitmap(assets.getBitmap("terrain"), -32, 0);
 
         this.camera.use(canvas);
 
