@@ -1,8 +1,9 @@
+import { clamp } from "../common/math.js";
 import { Vector } from "../common/vector.js";
 import { ProgramEvent } from "../core/event.js";
 import { InputState } from "../core/input.js";
 import { Bitmap } from "../renderer/bitmap.js";
-import { Canvas } from "../renderer/canvas.js";
+import { Canvas, Flip } from "../renderer/canvas.js";
 import { Sprite } from "../renderer/sprite.js";
 import { GameObject } from "./gameobject.js";
 
@@ -14,7 +15,13 @@ export class Player extends GameObject {
     private ledgeTimer : number = 0;
     private canJump : boolean = false;
 
+    private propelling : boolean = false;
+    private propellerTimer : number = 0;
+    private propellerRelease : boolean = false;
+    private canFly : boolean = true;
+
     private spr : Sprite;
+    private propeller : Sprite;
 
 
     constructor(x : number, y : number) {
@@ -26,6 +33,7 @@ export class Player extends GameObject {
         this.center = new Vector();
 
         this.spr = new Sprite();
+        this.propeller = new Sprite();
     
         this.exist = true;
     }
@@ -36,6 +44,12 @@ export class Player extends GameObject {
         const BASE_SPEED = 1.5;
         const BASE_GRAVITY = 4.0;
         const JUMP_TIME = 20;
+
+        const PROPELLER_FALL_SPEED = 1.0;
+        const FLY_DELTA = 0.30;
+        const FLY_SPEED_MAX = -1.5;
+        const FLY_SPEED_LOW = 2.5;
+        const FLY_TIME = 60;
 
         let dir = 0;
         if ((event.input.getAction("right") & InputState.DownOrPressed) != 0) {
@@ -51,7 +65,15 @@ export class Player extends GameObject {
         this.target.y = BASE_GRAVITY;
 
         const jumpButtonState = event.input.getAction("jump");
+        const jumpButtonDown = (jumpButtonState & InputState.DownOrPressed) != 0;
+        
+        if (this.propellerRelease && !jumpButtonDown) {
 
+            this.propellerRelease = false;
+        } 
+        this.propelling = !this.propellerRelease && jumpButtonDown;
+
+        // Jump
         if (this.ledgeTimer > 0 && jumpButtonState == InputState.Pressed) {
 
             this.jumpTimer = JUMP_TIME;
@@ -62,12 +84,36 @@ export class Player extends GameObject {
 
             this.jumpTimer = 0;
         }
+
+        // Propelling
+        if (this.propelling) {
+
+            if (this.propellerTimer > 0) {
+
+                this.propellerTimer -= event.tick;
+                this.speed.y = clamp(this.speed.y - FLY_DELTA*event.tick, FLY_SPEED_MAX, FLY_SPEED_LOW);
+            }
+            else if (!this.canFly && this.speed.y >= PROPELLER_FALL_SPEED) {
+
+                this.speed.y = PROPELLER_FALL_SPEED;
+                this.target.y = this.speed.y;
+            }
+            else if (this.canFly) {
+
+                this.propellerTimer = FLY_TIME;
+                this.canFly = false;
+            }
+        }
+        else {
+
+            this.propellerTimer = 0;
+        }
     }
 
 
     protected updateTimers(event : ProgramEvent) : void {
 
-        const JUMP_SPEED = 3.0;
+        const JUMP_SPEED = 2.75;
 
         if (this.jumpTimer > 0) {
 
@@ -95,16 +141,16 @@ export class Player extends GameObject {
     }
 
 
-    private animate(event : ProgramEvent) : void {
+    private animate(globalSpeed : number, event : ProgramEvent) : void {
 
-        const WALK_SPEED = 4;
         const JUMP_EPS = 0.5;
+        const PROPELLER_SPEED = 2;
 
         let frame : number;
 
         if (this.canJump) {
 
-            this.spr.animate(0, 3, WALK_SPEED, event.tick);
+            this.spr.animate(0, 3, 8 - globalSpeed*2, event.tick);
         }
         else {
 
@@ -116,6 +162,11 @@ export class Player extends GameObject {
 
             this.spr.setFrame(frame);
         }
+
+        if (this.propelling) {
+
+            this.propeller.animate(0, 3, PROPELLER_SPEED, event.tick);
+        }
     }
 
 
@@ -124,7 +175,7 @@ export class Player extends GameObject {
         this.control(event);
         this.updateTimers(event);
         this.checkScreenCollisions(event);
-        this.animate(event);
+        this.animate(globalSpeed, event);
 
         this.canJump = false;
 
@@ -142,6 +193,10 @@ export class Player extends GameObject {
 
         this.canJump = true;
         this.ledgeTimer = LEDGE_TIME;
+
+        this.propellerRelease = true;
+        this.propelling = false;
+        this.canFly = true;
     }
 
 
@@ -150,6 +205,10 @@ export class Player extends GameObject {
         const SX = [0, 1, 0, 2, 0, 0, 1];
         const SY = [0, 0, 0, 0, 1, 0, 1];
         const FEATHER = [0, 1, 0, 2, 1, 0, 2];
+
+        const PROPELLER_FLIP = [Flip.None, Flip.None, Flip.None, Flip.Horizontal];
+        const PROPELLER_SX = [32, 48, 56, 48];
+        const PROPELLER_SW = [16, 8, 8, 8];
         
         if (!this.exist)
             return;
@@ -163,10 +222,27 @@ export class Player extends GameObject {
 
         // Body
         canvas.drawBitmap(bmp, dx, dy, 48, 32, 16, 16);
+
         // Legs
         canvas.drawBitmap(bmp, dx, dy + 8, sx, sy, 16, 8);
+        
         // Feather
-        canvas.drawBitmap(bmp, dx, dy - 6, fsx, 32, 16, 8);
+        let sw : number;
+        let propellerFrame : number;
+        if (this.propelling) {
+
+            propellerFrame = this.propeller.getFrame();
+            sw = PROPELLER_SW[propellerFrame];
+
+            canvas.drawBitmap(bmp, 
+                dx + (16 - sw)/2, dy - 6, 
+                PROPELLER_SX[propellerFrame], 48, sw, 8, 
+                PROPELLER_FLIP[propellerFrame]);
+        }
+        else {
+
+            canvas.drawBitmap(bmp, dx, dy - 6, fsx, 32, 16, 8);
+        }
 
         // Eyes
         canvas.fillColor("#aa0000");

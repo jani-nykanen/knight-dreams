@@ -25,6 +25,7 @@ const PALETTE = [
     "55aaffff", // I Lighter blue
     "005500ff", // J Dark green
     "aaffffff", // K Bright blue
+    "ff0000ff", // L Bright red
 ];
 
 
@@ -33,15 +34,15 @@ const COLOR_MAP = [
     "1540", "1540", "6670", "0880", "1E70", "19A0", "19A0", "19A0",
     "1670", "1670", "1B80", "1B80", "1E70", "19A0", "19A0", "19A0",
     "1670", "1670", "1540", "1540", "1670", "1B80", "1B80", "1B80",
-    "6660", "6660", "1540", "1540", "1670", "1670", "1C20", "0K20",
+    "6660", "6660", "1540", "1540", "1670", "1670", "1L30", "1970",
     "1FG0", "1FG0", "1FG0", "1FG0", "1FG0", "1FG0", "1DC0", "1DC0",
     "1B80", "1B80", "1B80", "1B80", "1B80", "1B80", "1DC0", "1DC0",
-    "1B80", "1B80", "1B80", "1B80", undefined, undefined, undefined, undefined,
+    "1B80", "1B80", "1B80", "1B80", "1FG0", "1FG0", "1FG0", "1FG0",
     "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", "1780", 
     "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", "1780", 
     "1J50", "1J50", "1J50", "1J50", "0400", "0400", "0400", "0400",
     "1540", "1540", "1540", "1E70", "1E70", "1E70", undefined, undefined,
-    "1540", "1540", "1540", undefined, undefined, undefined, undefined, undefined,
+    "1540", "1540", "1540", "0K20", undefined, undefined, undefined, undefined,
 ];
 
 
@@ -168,7 +169,8 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
         put(3, 0, 11 + i, 4, 1, 5);
 
         // Spikes
-        put(6, 3, 13 + i, 5);
+        put(6, 3, 13 + i, 7);
+        put(7, 3, 15 + i, 7);
     }
 
 
@@ -283,7 +285,7 @@ const generateSky = (c : CanvasRenderingContext2D,
     // Stars
     for (let a of STARS) {
 
-        c.drawImage(bmp[0], 56, 24 + a[2]*4, 4, 4, a[0], a[1], 4, 4);
+        c.drawImage(bmp[0], 24, 88 + a[2]*4, 4, 4, a[0], a[1], 4, 4);
     }
 }
 

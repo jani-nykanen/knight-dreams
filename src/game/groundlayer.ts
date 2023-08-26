@@ -17,6 +17,9 @@ const MAX_HEIGHT = [5, 4];
 const DECORATION_WAIT_MIN = 8;
 const DECORATION_WAIT_MAX = 16;
 
+const SPIKE_WAIT_MIN = 8;
+const SPIKE_WAIT_MAX = 16;
+
 
 const enum TileType {
 
@@ -48,6 +51,7 @@ export class GroundLayer {
     private slope : SlopeDirection[];
     private type : TileType[];
     private decorations : Decoration[];
+    private spikes : boolean[];
 
     private activeHeight : number;
     private activeType : TileType;
@@ -60,7 +64,10 @@ export class GroundLayer {
 
     private gapTimer : number = 0;
 
-    private decorationWait : number = 0;
+    private decorationWait : number;
+
+    private spikeWait : number;
+    private spikeCount : number = 0;
 
     private ref : GroundLayer | undefined = undefined;
 
@@ -83,9 +90,11 @@ export class GroundLayer {
         this.type = (new Array<TileType> (this.width)).fill(this.activeType);
         this.slope = (new Array<SlopeDirection> (this.width)).fill(SlopeDirection.None);
         this.decorations = (new Array<Decoration> (this.width)).fill(Decoration.None);
+        this.spikes = (new Array<boolean> (this.width)).fill(false);
 
         this.slopeWait = sampleUniform(SLOPE_WAIT_MIN, SLOPE_WAIT_MAX);
         this.decorationWait = sampleUniform(DECORATION_WAIT_MIN, DECORATION_WAIT_MAX);
+        this.spikeWait = sampleUniform(SPIKE_WAIT_MIN, SPIKE_WAIT_MAX);
     
         this.layerType = type;
         this.shift = shift;
@@ -226,7 +235,7 @@ export class GroundLayer {
                 TYPE_WAIT_MAX[this.layerType as number][this.activeType]);
         }
     }
-
+    
 
     private updateDecorations(tilePointer : number) : boolean {
 
@@ -262,7 +271,37 @@ export class GroundLayer {
         this.decorations[tilePointer] = type;
         this.decorationWait = sampleUniform(DECORATION_WAIT_MIN, DECORATION_WAIT_MAX);
 
+        if (type == Decoration.BigBush) {
+
+            this.spikeWait = Math.max(this.spikeWait + 1, 1);
+        }
+
         return true;
+    }
+
+
+    private updateSpikes() : boolean {
+
+        if (this.activeType != TileType.Surface ||
+            this.activeSlope != SlopeDirection.None) {
+
+            this.spikeCount = 0;
+            return false;
+        }
+
+        if ((-- this.spikeCount) > 0) {
+
+            return true;
+        }
+
+        if ((-- this.spikeWait) <= 0) {
+
+            this.spikeWait = sampleUniform(SPIKE_WAIT_MIN, SPIKE_WAIT_MAX);
+            this.spikeCount = sampleUniform(1, 2);
+
+            return true;
+        }
+        return false;
     }
 
 
@@ -270,9 +309,11 @@ export class GroundLayer {
 
         this.updateSlope();
         this.updateType();
-        if (!this.updateDecorations(tilePointer)) {
 
-            this.decorations[tilePointer] = Decoration.None;
+        this.decorations[tilePointer] = Decoration.None;
+        if (!(this.spikes[tilePointer] = this.updateSpikes())) {
+
+            this.updateDecorations(tilePointer);
         }
 
         this.height[tilePointer] = this.activeHeight;
@@ -316,6 +357,7 @@ export class GroundLayer {
             left = this.type[negMod(i - 1, this.width)] != TileType.Surface;
             right = this.type[(i + 1) % this.width] != TileType.Surface;
 
+            // Decorations
             if (this.decorations[i] != Decoration.None) {
 
                 drawDecoration(canvas, bmp, this.decorations[i], dx, dy*16);
@@ -376,6 +418,13 @@ export class GroundLayer {
             default:
                 break;
             }
+
+            // Spikes
+            if (this.spikes[i]) {
+
+                canvas.drawBitmap(bmp, dx, (dy - 1)*16, 112 + (tilePointer % 2)*16, 48, 16, 16);
+            }
+
         }
     }
 
