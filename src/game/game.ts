@@ -112,10 +112,14 @@ export class Game implements Scene {
         this.terrain.draw(canvas, assets);
         this.player.draw(canvas, bmpBase);
 
+        canvas.moveTo();
         if (this.paused) {
 
             canvas.fillColor("rgba(0,0,0,0.33)");
             canvas.fillRect();
+
+            canvas.drawText(assets.getBitmap("font_yellow"), "PAUSED", 
+                canvas.width/2, canvas.height/2 - 4, 0, 0, TextAlign.Center);
         }
     }
 
