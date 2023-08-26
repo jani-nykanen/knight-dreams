@@ -1,11 +1,9 @@
 import { AssetManager } from "../core/assets.js";
 import { ProgramEvent } from "../core/event.js";
+import { InputState } from "../core/input.js";
 import { Scene, SceneParameter } from "../core/scene.js";
-import { TransitionType } from "../core/transition.js";
+// import { TransitionType } from "../core/transition.js";
 import { Canvas } from "../renderer/canvas.js";
-import { drawTextBox } from "../ui/box.js";
-import { Menu } from "../ui/menu.js";
-import { MenuButton } from "../ui/menubutton.js";
 
 
 const TEXT = 
@@ -19,26 +17,42 @@ PRESS ENTER TO CONFIRM.`;
 export class AudioIntro implements Scene {
 
 
-    private menu : Menu;
+    // private menu : Menu;
+    private cursorPos : number = 0;
+
+    private readonly width : number;
+    private readonly height : number;
 
 
     constructor(event : ProgramEvent) {
 
-        this.menu = new Menu(
-        [
-            new MenuButton("YES", (event : ProgramEvent) => this.goToGame(true, event)),
-            new MenuButton("NO", (event : ProgramEvent) => this.goToGame(false, event))
+        const lines = TEXT.split("\n");
 
-        ], true);
+        this.width = Math.max(...lines.map(s => s.length));
+        this.height = lines.length;
     }
 
 
-    private goToGame(toggleAudio : boolean, event : ProgramEvent) : void {
+    private drawBox (canvas : Canvas, 
+        x : number, y : number, w : number, h : number, 
+        shadowOffset = 4) : void {
 
-        event.audio.toggle(toggleAudio);
-        event.transition.activate(false, TransitionType.Circle, 1.0/30.0);
+        const COLORS = ["#000000", "#ffffff", "#000000"];
 
-        event.scenes.changeScene("game", event);
+        x -= w/2;
+        y -= h/2;
+
+        if (shadowOffset > 0) {
+    
+            canvas.fillColor("rgba(0, 0, 0, 0.33)");
+            canvas.fillRect(x + shadowOffset, y + shadowOffset, w, h);
+        }
+    
+        for (let i = 0; i < COLORS.length; ++ i) {
+    
+            canvas.fillColor(COLORS[i]);
+            canvas.fillRect(x + i, y + i, w - i*2, h - i*2);
+        }
     }
 
 
@@ -47,24 +61,46 @@ export class AudioIntro implements Scene {
     
     public update(event: ProgramEvent) : void {
 
-        this.menu.update(event);
+        if (event.input.getAction("up") == InputState.Pressed ||
+            event.input.getAction("down") == InputState.Pressed) {
+
+            this.cursorPos = 1 - this.cursorPos;
+        }
+
+        if (event.input.getAction("select") == InputState.Pressed) {
+
+            event.audio.toggle(this.cursorPos == 0);
+            event.scenes.changeScene("game", event);
+        }
     }
 
 
     public redraw(canvas: Canvas, assets : AssetManager) : void {
 
-        const SHADOW_OFFSET = 4;
-        const COLORS = ["#ffffff", "#000000", "#5555aa"];
+        const CENTER_Y = 48;
+        const CONFIRM_BOX_CENTER_Y = 112;
+        const MARGIN = 8;
 
-        const font = assets.getBitmap("font_white");
+        const fonts = [assets.getBitmap("font_white"), assets.getBitmap("font_yellow")];
 
         canvas.clear("#0055aa");
 
-        drawTextBox(canvas, font,
-            TEXT, canvas.width/2, 64, -1, 12, 
-            COLORS, SHADOW_OFFSET);
-        this.menu.draw(canvas, assets, 0, 48, 12, true, 
-            COLORS, SHADOW_OFFSET);
+        const w = this.width*7;
+        const h = this.height*10;
+
+        this.drawBox(canvas, canvas.width/2, CENTER_Y, w + MARGIN, h + MARGIN);
+        canvas.drawText(fonts[0], TEXT, canvas.width/2 - w/2, CENTER_Y - h/2, -1, 2);
+
+        this.drawBox(canvas, canvas.width/2, CONFIRM_BOX_CENTER_Y, 40, 32);
+
+        let text : string;
+        let active : boolean;
+        for (let i = 0; i < 2; ++ i) {
+
+            active = i == this.cursorPos;
+            text = (active ? "&" : " ") + ["YES", "NO"][i];
+            canvas.drawText(fonts[Number(active)], text, canvas.width/2 - 18, CONFIRM_BOX_CENTER_Y - 10 + i*10, -1, 0);
+        } 
     }
 
 

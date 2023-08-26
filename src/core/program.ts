@@ -4,7 +4,7 @@ import { AssetManager } from "./assets.js";
 import { ProgramEvent } from "./event.js";
 import { InputManager } from "./input.js";
 import { SceneManager } from "./scenemanager.js";
-import { TransitionManager } from "./transition.js";
+// import { TransitionManager } from "./transition.js";
 
 
 export class Program {
@@ -14,7 +14,7 @@ export class Program {
     private audio : AudioPlayer;
     private input : InputManager;
     private assets : AssetManager;
-    private transition : TransitionManager;
+    // private transition : TransitionManager;
     private scenes : SceneManager;
     private event : ProgramEvent;
 
@@ -32,11 +32,13 @@ export class Program {
         this.audio = new AudioPlayer();
         this.input = new InputManager();
         this.assets = new AssetManager();
-        this.transition = new TransitionManager();
+        // this.transition = new TransitionManager();
         this.scenes = new SceneManager();
 
         this.event = new ProgramEvent(this.canvas, this.scenes,
-            this.input, this.audio, this.transition, this.assets);
+            this.input, this.audio, 
+            // this.transition, 
+            this.assets);
     }
 
 
@@ -64,7 +66,7 @@ export class Program {
             if (loaded) {
 
                 this.scenes.update(this.event);
-                this.transition.update(this.event);
+                // this.transition.update(this.event);
             }
             
             if (firstFrame) {
@@ -77,7 +79,7 @@ export class Program {
         if (loaded) {
             
             this.scenes.redraw(this.canvas, this.assets);
-            this.transition.draw(this.canvas);
+            // this.transition.draw(this.canvas);
         }
         else {
 

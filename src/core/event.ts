@@ -1,6 +1,6 @@
 import { Canvas } from "../renderer/canvas.js";
 import { InputManager } from "./input.js";
-import { TransitionManager } from "./transition.js";
+// import { TransitionManager } from "./transition.js";
 import { AudioPlayer } from "../audio/audioplayer.js";
 import { SceneManager } from "./scenemanager.js";
 import { AssetManager } from "./assets.js";
@@ -12,7 +12,7 @@ export class ProgramEvent {
     private readonly canvas : Canvas;
 
     public readonly input : InputManager;
-    public readonly transition : TransitionManager;
+    // public readonly transition : TransitionManager;
     public readonly audio : AudioPlayer;
     public readonly assets : AssetManager;
     public readonly scenes : SceneManager;
@@ -34,14 +34,15 @@ export class ProgramEvent {
 
     constructor(canvas : Canvas, scenes : SceneManager,
         input : InputManager, audio : AudioPlayer, 
-        transition : TransitionManager, assets : AssetManager) {
+        // transition : TransitionManager, 
+        assets : AssetManager) {
 
         this.canvas = canvas;
         this.scenes = scenes;
 
         this.input = input;
         this.audio = audio;
-        this.transition = transition;
+        // this.transition = transition;
         this.assets = assets;
     }
 }

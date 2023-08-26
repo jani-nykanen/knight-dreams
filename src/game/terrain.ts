@@ -90,7 +90,7 @@ export class Terrain {
             .spawn(this.width*16 - BASE_SHIFT_X*16 + (this.tileOffset % 16), 
                 height*16, width, type);
 
-        this.specialWait = sampleUniform(width + 1, SPECIAL_WAIT_MAX);
+        this.specialWait = sampleUniform(width + 2, SPECIAL_WAIT_MAX);
     }
 
 

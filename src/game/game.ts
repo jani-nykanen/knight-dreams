@@ -18,6 +18,8 @@ export class Game implements Scene {
 
     private cloudPos : number = 0;
 
+    private paused : boolean = false;
+
 
     constructor(event : ProgramEvent) {
 
@@ -27,15 +29,18 @@ export class Game implements Scene {
     }
 
 
-    private drawBackground(canvas : Canvas, bmp : Bitmap | undefined) : void {
+    private drawBackground(canvas : Canvas, assets : AssetManager) : void {
 
         const CLOUD_Y = 64;
         const CLOUD_EXTRA_HEIGHT = 16;
         const CAMERA_SHIFT_FACTOR = 0.25;
 
-        canvas.move(0, -Math.round(this.camera.getPosition()*CAMERA_SHIFT_FACTOR));
+        const bmpBase = assets.getBitmap("base");
+        const bmpSky = assets.getBitmap("sky");
 
-        canvas.clear("#55aaff");
+        canvas.drawBitmap(bmpSky);
+
+        canvas.move(0, -Math.round(this.camera.getPosition()*CAMERA_SHIFT_FACTOR));
 
         // Clouds
         canvas.fillColor("#ffffff");
@@ -44,7 +49,7 @@ export class Game implements Scene {
         const shift = -Math.round(this.cloudPos);
         for (let i = 0; i < (canvas.width/48) + 2; ++ i) {
 
-            canvas.drawBitmap(bmp, shift + i*48, CLOUD_Y, 0, 56, 48, 16)
+            canvas.drawBitmap(bmpBase, shift + i*48, CLOUD_Y, 0, 56, 48, 16)
         }
 
         // Water
@@ -55,7 +60,7 @@ export class Game implements Scene {
 
         for (let i = 0; i < canvas.width/8; ++ i) {
 
-            canvas.drawBitmap(bmp, i*8, CLOUD_Y + 16 + CLOUD_EXTRA_HEIGHT, 48, 56, 8, 16);
+            canvas.drawBitmap(bmpBase, i*8, CLOUD_Y + 16 + CLOUD_EXTRA_HEIGHT, 48, 56, 8, 16);
         }
 
         canvas.moveTo();
@@ -74,6 +79,13 @@ export class Game implements Scene {
 
         const globalSpeed = 2.0; // TEMP
 
+        if (event.input.getAction("pause") == InputState.Pressed) {
+
+            this.paused = !this.paused;
+        }
+        if (this.paused)
+            return;
+
         this.terrain.update(globalSpeed, event);
 
         this.player.update(globalSpeed, event);
@@ -91,14 +103,20 @@ export class Game implements Scene {
 
         canvas.moveTo();
 
-        this.drawBackground(canvas, bmpBase);
+        this.drawBackground(canvas, assets);
 
-        // canvas.drawBitmap(assets.getBitmap("terrain"), -32, 0);
+        // canvas.drawBitmap(assets.getBitmap("terrain"), 0, 0);
 
         this.camera.use(canvas);
 
         this.terrain.draw(canvas, assets);
         this.player.draw(canvas, bmpBase);
+
+        if (this.paused) {
+
+            canvas.fillColor("rgba(0,0,0,0.33)");
+            canvas.fillRect();
+        }
     }
 
 

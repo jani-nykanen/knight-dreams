@@ -15,9 +15,10 @@ const initialEvent = (event : ProgramEvent) : void => {
     event.input.addAction("down", ["ArrowDown"]);
     event.input.addAction("select", ["Enter", "Space"]);
     event.input.addAction("jump", ["ArrowUp"]);
+    event.input.addAction("pause", ["Enter"]);
 
-    event.scenes.addScene("audiointro", new AudioIntro(event), false);
-    event.scenes.addScene("game", new Game(event), true);
+    event.scenes.addScene("audiointro", new AudioIntro(event), true);
+    event.scenes.addScene("game", new Game(event), false);
 
     event.assets.loadBitmap("_font", "font.png");
     event.assets.loadBitmap("_base", "base.png");

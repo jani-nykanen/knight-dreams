@@ -24,6 +24,7 @@ const PALETTE = [
     "0055aaff", // H Darker blue,
     "55aaffff", // I Lighter blue
     "005500ff", // J Dark green
+    "aaffffff", // K Bright blue
 ];
 
 
@@ -32,13 +33,15 @@ const COLOR_MAP = [
     "1540", "1540", "6670", "0880", "1E70", "19A0", "19A0", "19A0",
     "1670", "1670", "1B80", "1B80", "1E70", "19A0", "19A0", "19A0",
     "1670", "1670", "1540", "1540", "1670", "1B80", "1B80", "1B80",
-    "6660", "6660", "1540", "1540", "1670", "1670", "1C20", undefined,
+    "6660", "6660", "1540", "1540", "1670", "1670", "1C20", "0K20",
     "1FG0", "1FG0", "1FG0", "1FG0", "1FG0", "1FG0", "1DC0", "1DC0",
     "1B80", "1B80", "1B80", "1B80", "1B80", "1B80", "1DC0", "1DC0",
     "1B80", "1B80", "1B80", "1B80", undefined, undefined, undefined, undefined,
     "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", "1780", 
     "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", "1780", 
     "1J50", "1J50", "1J50", "1J50", "0400", "0400", "0400", "0400",
+    "1540", "1540", "1540", "1E70", "1E70", "1E70", undefined, undefined,
+    "1540", "1540", "1540", undefined, undefined, undefined, undefined, undefined,
 ];
 
 
@@ -66,6 +69,7 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
     }
 
     c.fillStyle = "#000000";
+    // Don't let this confuse you...
     c.translate(8, 0);
 
     //
@@ -168,7 +172,6 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
     }
 
 
-
     //
     // Palm tree
     //
@@ -187,7 +190,7 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
         put(7, 7, 20, 1 + i, 4, 1);
     }
     put(7, 8, 20, 3, 4, 1);
-    
+
 
     //
     // Mushrooms
@@ -218,6 +221,70 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
         put(5 + i*2, 1, 13 + i*5, 1);
     }
 
+    c.translate(-8, 0);
+    // Bushes
+    c.drawImage(base, 0, 80, 24, 16, 0, 48, 24, 16);
+    c.drawImage(base, 0, 80, 8, 16, 24, 48, 8, 16);
+    c.drawImage(base, 16, 80, 8, 16, 32, 48, 8, 16);
+
+    // Fence
+    put(3, 10, 1, 9);
+    put(4, 10, 2, 9);
+    put(4, 10, 3, 9);
+    put(5, 10, 4, 9);
+}
+
+
+const generateSky = (c : CanvasRenderingContext2D, 
+    width : number, height : number, bmp : (Bitmap | undefined) []) : void => {
+
+    const STARS = [
+        [32, 16, 0],
+        [84, 40, 1],
+        [64, 8, 1],
+        [112, 20, 0],
+        [8, 36, 1],
+        [48, 48, 0],
+        [180, 12, 0],
+        [180, 64, 1],
+        [104, 64, 0],
+        [18, 62, 1],
+        [32, 80, 0],
+        [64, 72, 1],
+        [128, 84, 1],
+        [176, 88, 0],
+    ];
+
+    const circle = (cx : number, cy : number, radius : number) => {
+
+        let ny : number;
+        let r : number;
+
+        for (let y = -radius; y <= radius; ++ y) {
+
+            ny = y/radius;
+
+            r = Math.round(Math.sqrt(1 - ny*ny) * radius);
+            if (r <= 0)
+                continue;
+
+            c.fillRect((cx - r) | 0, (cy + y) | 0, r*2, 1);
+        }
+    }
+
+    c.fillStyle = "#55aaff";
+    c.fillRect(0, 0, width, height);
+
+    c.fillStyle = "#aaffff";
+    circle(width - 48, 36, 28);
+    c.fillStyle = "#55aaff";
+    circle(width - 66, 26, 26);
+
+    // Stars
+    for (let a of STARS) {
+
+        c.drawImage(bmp[0], 56, 24 + a[2]*4, 4, 4, a[0], a[1], 4, 4);
+    }
 }
 
 
@@ -233,6 +300,8 @@ const generate = (event : ProgramEvent) : void => {
     event.assets.addBitmap("base", coloredBase);
     event.assets.addBitmap("terrain", 
         BitmapGenerator.createCustom(256, 128, [coloredBase], generateTerrainTileset));
+    event.assets.addBitmap("sky", 
+        BitmapGenerator.createCustom(192, 144, [coloredBase], generateSky)); 
 }
 
 

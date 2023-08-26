@@ -113,7 +113,7 @@ export class Canvas {
     }
 
 
-    public fillRect(x : number, y : number, w : number, h : number) : void {
+    public fillRect(x : number = 0, y : number = 0, w : number = this.width, h : number = this.height) : void {
 
         const c = this.ctx;
 

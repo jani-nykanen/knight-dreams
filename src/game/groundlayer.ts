@@ -1,8 +1,9 @@
-import { clamp, negMod, sampleUniform } from "../common/math.js";
+import { clamp, negMod, sampleUniform, weightedProbability } from "../common/math.js";
 import { ProgramEvent } from "../core/event.js";
 import { Bitmap } from "../renderer/bitmap.js";
 import { Canvas } from "../renderer/canvas.js";
 import { GameObject } from "./gameobject.js";
+import { Decoration, drawDecoration } from "./decoration.js";
 
 
 export const BASE_SHIFT_X = 2;
@@ -30,13 +31,6 @@ const enum SlopeDirection {
     Up = -1,
     None = 0,
     Down = 1
-};
-
-
-const enum Decoration {
-
-    None = 0,
-    Palmtree = 1,
 };
 
 
@@ -131,7 +125,8 @@ export class GroundLayer {
             this.layerType == GroundLayerType.Background &&
             this.ref !== undefined) {
 
-            dif = this.activeHeight - this.ref.activeHeight;
+            // TODO: Add slope direction to the ref height?
+            dif = this.activeHeight - this.ref?.activeHeight;
             if ((this.ref.activeSlope == SlopeDirection.Up &&
                 dif <= 2) || dif <= 1) {
 
@@ -235,6 +230,8 @@ export class GroundLayer {
 
     private updateDecorations(tilePointer : number) : boolean {
 
+        const DECORATION_PROB_WEIGHTS = [0.20, 0.30, 0.50];
+
         if ((-- this.decorationWait) > 0)
             return false;
 
@@ -244,26 +241,28 @@ export class GroundLayer {
              this.ref?.activeType !== TileType.None))
             return false;
 
-        this.decorations[tilePointer] = Decoration.Palmtree;
+        let type = (weightedProbability(DECORATION_PROB_WEIGHTS) + 1) as Decoration;
+        // No room for a palmtree
+        // (NOTE: There is no empirical evidence that this even works)
+        // Note: the following expression has some unnecessary question marks after ref
+        // to silent Closure...
+        if (this.layerType == GroundLayerType.Foreground && 
+            this.ref !== undefined &&
+            this.ref?.activeType == TileType.Surface &&
+            this.ref?.activeHeight - this.activeHeight <= 2) {
+
+            type = Decoration.BigBush;
+        }
+        // No room for a big bush
+        if (type == Decoration.BigBush && (this.slopeWait <= 2 || this.typeWait <= 1)) {
+
+            type = Decoration.SmallBush;
+        }
+
+        this.decorations[tilePointer] = type;
         this.decorationWait = sampleUniform(DECORATION_WAIT_MIN, DECORATION_WAIT_MAX);
 
         return true;
-    }
-
-
-    private drawDecoration(canvas : Canvas, bmp : Bitmap | undefined,
-        decoration : Decoration, dx : number, dy : number) : void {
-
-        switch (decoration) {
-
-        case Decoration.Palmtree:
-
-            canvas.drawBitmap(bmp, dx - 8, dy - 33, 160, 0, 32, 33)
-            break;
-
-        default:
-            break;
-        }
     }
 
 
@@ -319,7 +318,7 @@ export class GroundLayer {
 
             if (this.decorations[i] != Decoration.None) {
 
-                this.drawDecoration(canvas, bmp, this.decorations[i], dx, dy*16);
+                drawDecoration(canvas, bmp, this.decorations[i], dx, dy*16);
             }
 
             switch (this.type[i]) {
@@ -359,6 +358,17 @@ export class GroundLayer {
                 break;
 
             case TileType.Bridge:
+
+                // Fence
+                if (!left) {
+
+                    canvas.drawBitmap(bmp, dx - 16, dy*16 + BRIDGE_Y_OFF - 14, 0, 64, 16, 16);
+                }
+                if (!right) {
+
+                    canvas.drawBitmap(bmp, dx + 16, dy*16 + BRIDGE_Y_OFF - 14, 32, 64, 16, 16);
+                }
+                canvas.drawBitmap(bmp, dx, dy*16 + BRIDGE_Y_OFF - 14, 16, 64, 16, 16);
 
                 canvas.drawBitmap(bmp, dx, dy*16 + BRIDGE_Y_OFF, 96, 32, 16, 16);
                 break;
@@ -418,6 +428,11 @@ export class GroundLayer {
 
             default:
                 break;
+            }
+
+            if (this.decorations[i] == Decoration.Palmtree) {
+
+                o.floorCollision(dx - 4, dy - 30, dx + 20, dy - 30, globalSpeed, event);
             }
         }
     }
