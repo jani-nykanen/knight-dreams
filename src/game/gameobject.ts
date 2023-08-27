@@ -44,7 +44,7 @@ export class GameObject extends ExistingObject {
     }
 
 
-    protected updateEvent(globalSpeed : number, event : ProgramEvent) : void {}
+    protected updateEvent?(globalSpeed : number, event : ProgramEvent) : void;
     protected die(globalSpeed : number, event : ProgramEvent) : boolean { return true; }
 
 
@@ -80,12 +80,12 @@ export class GameObject extends ExistingObject {
             return;
         }
 
-        this.updateEvent(globalSpeed, event);
+        this.updateEvent?.(globalSpeed, event);
         this.move(event);
     }
 
 
-    public draw(canvas : Canvas, bmp : Bitmap | undefined) : void {}
+    public draw?(canvas : Canvas, bmp : Bitmap | undefined) : void;
 
 
     public forceKill() : void {
@@ -147,4 +147,7 @@ export class GameObject extends ExistingObject {
         }
         return false;
     }
+
+
+    public hurtCollision?(x : number, y : number, w : number, h : number, event : ProgramEvent) : boolean;
 }

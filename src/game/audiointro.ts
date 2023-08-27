@@ -34,20 +34,17 @@ export class AudioIntro implements Scene {
 
 
     private drawBox (canvas : Canvas, 
-        x : number, y : number, w : number, h : number, 
-        shadowOffset = 4) : void {
+        x : number, y : number, w : number, h : number) : void {
 
+        const SHADOW_OFFSET = 4;
         const COLORS = ["#000000", "#ffffff", "#000000"];
 
         x -= w/2;
         y -= h/2;
 
-        if (shadowOffset > 0) {
-    
-            canvas.fillColor("rgba(0, 0, 0, 0.33)");
-            canvas.fillRect(x + shadowOffset, y + shadowOffset, w, h);
-        }
-    
+        canvas.fillColor("rgba(0, 0, 0, 0.33)");
+        canvas.fillRect(x + SHADOW_OFFSET, y + SHADOW_OFFSET, w, h);
+        
         for (let i = 0; i < COLORS.length; ++ i) {
     
             canvas.fillColor(COLORS[i]);

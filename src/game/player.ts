@@ -11,9 +11,12 @@ import { GameObject } from "./gameobject.js";
 
 export class Player extends GameObject {
 
+
+    private initialPos : Vector;
+
     private jumpTimer : number = 0;
     private ledgeTimer : number = 0;
-    private canJump : boolean = false;
+    private touchSurface : boolean = true;
 
     private propelling : boolean = false;
     private propellerTimer : number = 0;
@@ -36,6 +39,8 @@ export class Player extends GameObject {
         this.propeller = new Sprite();
     
         this.exist = true;
+
+        this.initialPos = new Vector(x, y);
     }
 
 
@@ -77,7 +82,7 @@ export class Player extends GameObject {
         if (this.ledgeTimer > 0 && jumpButtonState == InputState.Pressed) {
 
             this.jumpTimer = JUMP_TIME;
-            this.canJump = false
+            this.touchSurface = false
             this.ledgeTimer = 0;
         }
         else if ((jumpButtonState & InputState.DownOrPressed) == 0) {
@@ -111,7 +116,7 @@ export class Player extends GameObject {
     }
 
 
-    protected updateTimers(event : ProgramEvent) : void {
+    private updateTimers(event : ProgramEvent) : void {
 
         const JUMP_SPEED = 2.75;
 
@@ -148,7 +153,7 @@ export class Player extends GameObject {
 
         let frame : number;
 
-        if (this.canJump) {
+        if (this.touchSurface) {
 
             this.spr.animate(0, 3, 8 - globalSpeed*2, event.tick);
         }
@@ -177,7 +182,7 @@ export class Player extends GameObject {
         this.checkScreenCollisions(event);
         this.animate(globalSpeed, event);
 
-        this.canJump = false;
+        this.touchSurface = false;
 
         // TEMP
         if (this.pos.y > event.screenHeight+16) {
@@ -187,11 +192,17 @@ export class Player extends GameObject {
     }
 
 
+    protected die(globalSpeed : number, event : ProgramEvent) : boolean { 
+        
+        return false; // Never die! 
+    }
+
+
     protected floorCollisionEvent(event: ProgramEvent): void {
         
         const LEDGE_TIME = 8;
 
-        this.canJump = true;
+        this.touchSurface = true;
         this.ledgeTimer = LEDGE_TIME;
 
         this.propellerRelease = true;
@@ -250,5 +261,39 @@ export class Player extends GameObject {
 
             canvas.fillRect(dx + 7 + i*4, dy + 6, 1, 1);
         }
+    }
+
+
+    public hurtCollision(x : number, y : number, w : number, h : number, event : ProgramEvent) : boolean {
+
+        if (!this.exist || this.dying)
+            return false;
+
+        if (this.doesOverlayRect(new Vector(x + w/2, y + h/2), new Vector(), new Vector(w, h))) {
+
+            this.dying = true;
+        }
+    }
+
+
+    public recreate() : void {
+
+        this.pos = this.initialPos.clone();
+        this.speed.zero();
+        this.target.zero();
+
+        this.canFly = false;
+        this.touchSurface = true;
+        this.propelling = false;
+        this.propellerTimer = 0;
+        this.propellerRelease = false;
+        this.ledgeTimer = 0;
+        this.jumpTimer = 0;
+
+        this.spr.setFrame(0);
+        this.propeller.setFrame(0);
+        
+        this.dying = false;
+        this.exist = true;
     }
 }

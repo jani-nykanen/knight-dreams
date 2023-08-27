@@ -8,6 +8,12 @@ export class ExistingObject {
 
 
     public doesExist = () : boolean => this.exist;
+
+
+    public forceKill() : void {
+
+        this.exist = false;
+    }
 }
 
 

@@ -7,6 +7,7 @@ import { Terrain } from "./terrain.js";
 import { Player } from "./player.js";
 import { Camera } from "./camera.js";
 import { Bitmap } from "../renderer/bitmap.js";
+import { updateSpeedAxis } from "./gameobject.js";
 
 
 export class Game implements Scene {
@@ -18,13 +19,16 @@ export class Game implements Scene {
 
     private cloudPos : number = 0;
 
+    private globalSpeed : number = 0.0;
+    private targetSpeed : number = 2.0;
+
     private paused : boolean = false;
 
 
     constructor(event : ProgramEvent) {
 
         this.terrain = new Terrain(event);
-        this.player = new Player(64, 64);
+        this.player = new Player(64, event.screenHeight - 40);
         this.camera = new Camera();
     }
 
@@ -67,6 +71,16 @@ export class Game implements Scene {
     }
 
 
+    private reset() : void {
+
+        this.player.recreate();
+        this.terrain.reset();
+
+        this.globalSpeed = 0.0;
+        this.targetSpeed = 2.0;
+    }
+
+
     public init(param : SceneParameter, event : ProgramEvent) : void {
 
         // TODO: (Re)set terrain
@@ -75,9 +89,8 @@ export class Game implements Scene {
 
     public update(event : ProgramEvent) : void {
 
-        const CLOUD_SPEED = 0.5;
-
-        const globalSpeed = 2.0; // TEMP
+        const CLOUD_BASE_SPEED = 0.25;
+        const CLOUD_SPEED_FACTOR = 0.125;
 
         if (event.input.getAction("pause") == InputState.Pressed) {
 
@@ -86,14 +99,22 @@ export class Game implements Scene {
         if (this.paused)
             return;
 
-        this.terrain.update(globalSpeed, event);
+        this.globalSpeed = updateSpeedAxis(this.globalSpeed, this.targetSpeed, 1.0/60.0);
 
-        this.player.update(globalSpeed, event);
-        this.terrain.objectCollision(this.player, globalSpeed, event);
+        this.terrain.update(this.globalSpeed, event);
+
+        this.player.update(this.globalSpeed, event);
+        if (this.player.isDying()) {
+            
+            this.reset();
+            return;
+        }
+
+        this.terrain.objectCollision(this.player, this.globalSpeed, event);
 
         this.camera.followObject(this.player, event);
 
-        this.cloudPos = (this.cloudPos + CLOUD_SPEED*event.tick) % 48;
+        this.cloudPos = (this.cloudPos + (CLOUD_BASE_SPEED + this.globalSpeed*CLOUD_SPEED_FACTOR)*event.tick) % 48;
     }
     
     
@@ -110,7 +131,7 @@ export class Game implements Scene {
         this.camera.use(canvas);
 
         this.terrain.draw(canvas, assets);
-        this.player.draw(canvas, bmpBase);
+        this.player.draw?.(canvas, bmpBase);
 
         canvas.moveTo();
         if (this.paused) {

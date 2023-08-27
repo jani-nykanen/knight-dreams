@@ -20,6 +20,9 @@ const DECORATION_WAIT_MAX = 16;
 const SPIKE_WAIT_MIN = 8;
 const SPIKE_WAIT_MAX = 16;
 
+const INITIAL_HEIGHT = [2, 0];
+const INITIAL_TYPE = [TileType.Surface, TileType.None];
+
 
 const enum TileType {
 
@@ -77,9 +80,6 @@ export class GroundLayer {
 
 
     constructor(width : number, type : GroundLayerType, shift = 0) {
-
-        const INITIAL_HEIGHT = [2, 0];
-        const INITIAL_TYPE = [TileType.Surface, TileType.None];
 
         this.width = width;
 
@@ -483,7 +483,29 @@ export class GroundLayer {
 
                 o.floorCollision(dx - 4, dy - 30, dx + 20, dy - 30, globalSpeed, event);
             }
+
+            if (this.spikes[i]) {
+
+                o.hurtCollision?.(dx + 2, dy - 6, 12, 6, event);
+            }
         }
+    }
+
+
+    public recreate() : void {
+
+        this.activeHeight = INITIAL_HEIGHT[this.layerType as number];
+        this.activeType = INITIAL_TYPE[this.layerType as number];
+
+        this.height.fill(this.activeHeight);
+        this.type.fill(this.activeType);
+        this.slope.fill(SlopeDirection.None);
+        this.decorations.fill(Decoration.None);
+        this.spikes = (new Array<boolean> (this.width)).fill(false);
+
+        this.slopeWait = sampleUniform(SLOPE_WAIT_MIN, SLOPE_WAIT_MAX);
+        this.decorationWait = sampleUniform(DECORATION_WAIT_MIN, DECORATION_WAIT_MAX);
+        this.spikeWait = sampleUniform(SPIKE_WAIT_MIN, SPIKE_WAIT_MAX);
     }
 
 

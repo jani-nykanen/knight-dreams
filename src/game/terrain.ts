@@ -148,4 +148,18 @@ export class Terrain {
             p.objectCollision(o, globalSpeed, event);
         }
     }
+
+
+    public reset() : void {
+
+        for (let p of this.specialPlatforms) {
+
+            p.forceKill();
+        }
+
+        for (let l of this.layers) {
+
+            l.recreate();
+        }
+    }
 }
