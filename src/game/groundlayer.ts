@@ -131,12 +131,11 @@ export class GroundLayer {
         const [min, max] = this.getHeightRange();
 
         if (this.activeType == TileType.Surface && 
-            this.layerType == GroundLayerType.Background &&
-            this.ref !== undefined) {
+            this.layerType == GroundLayerType.Background) {
 
             // TODO: Add slope direction to the ref height?
             dif = this.activeHeight - this.ref?.activeHeight;
-            if ((this.ref.activeSlope == SlopeDirection.Up &&
+            if ((this.ref?.activeSlope == SlopeDirection.Up &&
                 dif <= 2) || dif <= 1) {
 
                 this.activeSlope = SlopeDirection.Up;
@@ -241,10 +240,8 @@ export class GroundLayer {
 
         const DECORATION_PROB_WEIGHTS = [0.20, 0.30, 0.50];
 
-        if ((-- this.decorationWait) > 0)
-            return false;
-
-        if (this.activeType != TileType.Surface ||
+        if ((-- this.decorationWait) > 0 ||
+            this.activeType != TileType.Surface ||
             this.activeSlope != SlopeDirection.None ||
             (this.layerType == GroundLayerType.Foreground &&
              this.ref?.activeType !== TileType.None))
@@ -256,7 +253,6 @@ export class GroundLayer {
         // Note: the following expression has some unnecessary question marks after ref
         // to silent Closure...
         if (this.layerType == GroundLayerType.Foreground && 
-            this.ref !== undefined &&
             this.ref?.activeType == TileType.Surface &&
             this.ref?.activeHeight - this.activeHeight <= 2) {
 
@@ -490,8 +486,10 @@ export class GroundLayer {
             }
         }
     }
+    
 
-
+    // It hurts to comment these out
+    /*
     public recreate() : void {
 
         this.activeHeight = INITIAL_HEIGHT[this.layerType as number];
@@ -507,6 +505,7 @@ export class GroundLayer {
         this.decorationWait = sampleUniform(DECORATION_WAIT_MIN, DECORATION_WAIT_MAX);
         this.spikeWait = sampleUniform(SPIKE_WAIT_MIN, SPIKE_WAIT_MAX);
     }
+    */
 
 
     public getHeight = () : number => this.activeHeight;

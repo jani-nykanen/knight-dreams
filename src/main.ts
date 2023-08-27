@@ -9,19 +9,22 @@ const initialEvent = (event : ProgramEvent) : void => {
 
     event.audio.setGlobalVolume(0.60);
 
-    event.input.addAction("left", ["ArrowLeft"]);
-    event.input.addAction("right", ["ArrowRight"]);
-    event.input.addAction("up", ["ArrowUp"]);
-    event.input.addAction("down", ["ArrowDown"]);
-    event.input.addAction("select", ["Enter", "Space"]);
-    event.input.addAction("jump", ["ArrowUp"]);
-    event.input.addAction("pause", ["Enter"]);
+    // Yes, I had to manually shorten these names to save
+    // some bytes. It's ugly, but necessary
 
-    event.scenes.addScene("audiointro", new AudioIntro(event), true);
-    event.scenes.addScene("game", new Game(event), false);
+    event.input.addAction("l", ["ArrowLeft"]);
+    event.input.addAction("r", ["ArrowRight"]);
+    event.input.addAction("u", ["ArrowUp"]);
+    event.input.addAction("d", ["ArrowDown"]);
+    event.input.addAction("s", ["Enter", "Space"]);
+    event.input.addAction("j", ["ArrowUp"]);
+    event.input.addAction("p", ["Enter"]);
 
-    event.assets.loadBitmap("_font", "font.png");
-    event.assets.loadBitmap("_base", "base.png");
+    event.scenes.addScene("g", new Game(event));
+    event.scenes.addScene("a", new AudioIntro(event));
+
+    event.assets.loadBitmap("_f", "f.png");
+    event.assets.loadBitmap("_b", "b.png");
 }
 
 

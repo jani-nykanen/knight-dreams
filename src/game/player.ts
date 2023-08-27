@@ -14,7 +14,7 @@ export const DEATH_TIME = 60;
 export class Player extends GameObject {
 
 
-    private initialPos : Vector;
+    // private initialPos : Vector;
 
     private jumpTimer : number = 0;
     private ledgeTimer : number = 0;
@@ -30,6 +30,13 @@ export class Player extends GameObject {
 
     private deathTimer : number = 0;
 
+    private fuel : number = 1.0;
+    // Yes, we store this here, I don't have room for another
+    // class
+    private score : number = 0;
+    private scoreTimer : number = 0;
+    private orbs : number = 0;
+
 
     constructor(x : number, y : number) {
 
@@ -44,7 +51,7 @@ export class Player extends GameObject {
     
         this.exist = true;
 
-        this.initialPos = new Vector(x, y);
+        // this.initialPos = new Vector(x, y);
     }
 
 
@@ -60,12 +67,14 @@ export class Player extends GameObject {
         const FLY_SPEED_LOW = 2.5;
         const FLY_TIME = 60;
 
+        const FUEL_CONSUMPTION = 1.0/300.0;
+
         let dir = 0;
-        if ((event.input.getAction("right") & InputState.DownOrPressed) != 0) {
+        if ((event.input.getAction("r") & InputState.DownOrPressed) != 0) {
 
             dir = 1;
         }
-        else if ((event.input.getAction("left") & InputState.DownOrPressed) != 0) {
+        else if ((event.input.getAction("l") & InputState.DownOrPressed) != 0) {
 
             dir = -1;
         }
@@ -73,7 +82,7 @@ export class Player extends GameObject {
         this.target.x = BASE_SPEED * dir;
         this.target.y = BASE_GRAVITY;
 
-        const jumpButtonState = event.input.getAction("jump");
+        const jumpButtonState = event.input.getAction("j");
         const jumpButtonDown = (jumpButtonState & InputState.DownOrPressed) != 0;
         
         if (this.propellerRelease && !jumpButtonDown) {
@@ -96,6 +105,8 @@ export class Player extends GameObject {
 
         // Propelling
         if (this.propelling) {
+
+            this.fuel = Math.max(0, this.fuel - FUEL_CONSUMPTION*event.tick);
 
             if (this.propellerTimer > 0) {
 
@@ -225,6 +236,12 @@ export class Player extends GameObject {
         this.animate(globalSpeed, event);
 
         this.touchSurface = false;
+
+        if ((this.scoreTimer += globalSpeed*event.tick) >= 60) {
+
+            this.scoreTimer -= 60;
+            this.score += (10*(1.0 + this.orbs/10.0)) | 0;
+        }
     }
 
 
@@ -311,13 +328,11 @@ export class Player extends GameObject {
         if (!this.exist || this.dying)
             return false;
 
-        if (this.doesOverlayRect(new Vector(x + w/2, y + h/2), new Vector(), new Vector(w, h))) {
-
-            this.dying = true;
-        }
+        this.dying = this.doesOverlayRect(new Vector(x + w/2, y + h/2), new Vector(), new Vector(w, h));
     }
 
-    
+    // This is more memory friendly, but wastes too many bytes...
+    /*
     public recreate() : void {
 
         this.pos = this.initialPos.clone();
@@ -332,6 +347,11 @@ export class Player extends GameObject {
         this.ledgeTimer = 0;
         this.jumpTimer = 0;
         this.deathTimer = 0;
+        this.fuel = 1.0;
+
+        this.score = 0;
+        this.scoreTimer = 0;
+        this.orbs = 0;
 
         this.spr.setFrame(0);
         this.propeller.setFrame(0);
@@ -339,7 +359,11 @@ export class Player extends GameObject {
         this.dying = false;
         this.exist = true;
     }
+    */
 
 
     public getDeathTimer = () : number => this.deathTimer;
+    public getFuel = () : number => this.fuel;
+    public getScore = () : number => this.score;
+    public getOrbs = () : number => this.orbs;
 }

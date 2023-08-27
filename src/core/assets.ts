@@ -11,11 +11,15 @@ export class AssetManager {
     private loaded : number = 0;
     private totalAssets : number = 0;
 
+    private emptyImage : Bitmap;
+
 
     constructor() {
 
         this.bitmaps = new Map<string, Bitmap> ();
         this.samples = new Map<string, Sample> ();
+
+        this.emptyImage = new Image(1, 1);
     }
 
 
@@ -49,7 +53,7 @@ export class AssetManager {
     }
 
 
-    public getBitmap = (name : string) : Bitmap | undefined => this.bitmaps.get(name);
+    public getBitmap = (name : string) : Bitmap => this.bitmaps.get(name) ?? this.emptyImage;
     public getSample = (name : string) : Sample | undefined => this.samples.get(name);
 
 

@@ -22,7 +22,7 @@ export class Camera {
 
         const py = o.getPosition().y - event.screenHeight/2 + RANGE_OFFSET;
 
-        // TEMP
+        // TEMP (or not?)
         let d = this.y - py;
         if (Math.abs(d) >= VERTICAL_DEADZONE) {
 
@@ -40,4 +40,10 @@ export class Camera {
 
 
     public getPosition = () : number => this.y;
+
+
+    public reset() : void {
+
+        this.y = 0;
+    }
 }

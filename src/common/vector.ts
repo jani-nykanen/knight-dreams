@@ -24,8 +24,9 @@ export class Vector {
 
     public clone = () : Vector => new Vector(this.x, this.y);
 
-
+/*
     static interpolate = (t : number, u : Vector, v : Vector) : Vector => new Vector(
         (1.0 - t)*u.x + t*v.x,
         (1.0 - t)*u.y + t*v.y);
+        */
 }

@@ -9,9 +9,6 @@ export class AudioPlayer {
     private globalVolume : number;
     private enabled : boolean;
 
-    // TODO: Remove in the final version?
-    private errorLogged = false;
-
 
     constructor(globalVolume = 1.0) {
 
@@ -38,15 +35,7 @@ export class AudioPlayer {
 
             s.play(volume * this.globalVolume);
         }
-        catch (e) {
-
-            // TODO: Possibly remove from the final version to save bytes
-            if (!this.errorLogged) {
-
-                console.log("Audio error: " + e);
-                this.errorLogged = true;
-            }
-        }
+        catch (e) {}
     }
 
 

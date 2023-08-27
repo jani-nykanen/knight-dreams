@@ -6,8 +6,35 @@ import { InputState } from "../core/input.js";
 import { Terrain } from "./terrain.js";
 import { DEATH_TIME, Player } from "./player.js";
 import { Camera } from "./camera.js";
-import { Bitmap } from "../renderer/bitmap.js";
 import { updateSpeedAxis } from "./gameobject.js";
+
+
+const scoreToString = (score : number, maxLength = 6) : string => {
+
+    const s = String(score);
+    return "0".repeat(Math.max(0, maxLength - s.length)) + s; 
+}
+
+
+const getHiscore = () : number => {
+
+    try {
+
+        return Number(window["localStorage"].getItem("__jnjs13k2023"));
+    }
+    catch (e) {}
+    return 0;
+}
+
+
+const storeScore = (score : number) : void => {
+
+    try {
+
+        window["localStorage"].setItem("__jnjs13k2023", String(score));
+    }
+    catch (e) {}
+}
 
 
 export class Game implements Scene {
@@ -25,12 +52,19 @@ export class Game implements Scene {
     private paused : boolean = false;
     private gameOverPhase : number = 0;
 
+    private transitionTimer : number = 1.0;
+    private fadeIn : boolean = false;
+
+    private hiscore : number = 0;
+
 
     constructor(event : ProgramEvent) {
 
         this.terrain = new Terrain(event);
         this.player = new Player(64, event.screenHeight - 40);
         this.camera = new Camera();
+
+        this.hiscore = getHiscore();
     }
 
 
@@ -40,8 +74,8 @@ export class Game implements Scene {
         const CLOUD_EXTRA_HEIGHT = 16;
         const CAMERA_SHIFT_FACTOR = 0.25;
 
-        const bmpBase = assets.getBitmap("base");
-        const bmpSky = assets.getBitmap("sky");
+        const bmpBase = assets.getBitmap("b");
+        const bmpSky = assets.getBitmap("s");
 
         canvas.drawBitmap(bmpSky);
 
@@ -72,10 +106,11 @@ export class Game implements Scene {
     }
 
 
-    private reset() : void {
+    private reset(event : ProgramEvent) : void {
 
-        this.player.recreate();
-        this.terrain.reset();
+        this.player = new Player(64, event.screenHeight - 40);
+        this.terrain = new Terrain(event)
+        this.camera.reset();
 
         this.globalSpeed = 0.0;
         this.targetSpeed = 2.0;
@@ -86,8 +121,8 @@ export class Game implements Scene {
 
     private drawGameOver(canvas : Canvas, assets : AssetManager) : void {
 
-        const bmpGameOver = assets.getBitmap("gameover");
-        const fontYellow = assets.getBitmap("font_yellow");
+        const bmpGameOver = assets.getBitmap("g");
+        const fontYellow = assets.getBitmap("fy");
 
         const dx = canvas.width/2 - 60;
         const dy = 32;
@@ -95,11 +130,11 @@ export class Game implements Scene {
 
         if (this.gameOverPhase == 2) {
 
-            canvas.fillColor("rgba(0,0,0,0.67)");
+            canvas.fillColor("#000000aa");
             canvas.fillRect();
 
-            canvas.drawText(fontYellow, "SCORE: 000000", cx, 80, -1, 0, TextAlign.Center);
-            canvas.drawText(fontYellow, "HI-SCORE: 000000", cx, 96, -1, 0, TextAlign.Center);
+            canvas.drawText(fontYellow, "SCORE: " + scoreToString(this.player.getScore()), cx, 80, -1, 0, TextAlign.Center);
+            canvas.drawText(fontYellow, "HI-SCORE: " + scoreToString(this.hiscore), cx, 96, -1, 0, TextAlign.Center);
         }
 
         let t = this.player.getDeathTimer() / DEATH_TIME;
@@ -113,28 +148,104 @@ export class Game implements Scene {
     }
 
 
-    public init(param : SceneParameter, event : ProgramEvent) : void {
+    private drawHUD(canvas : Canvas, assets : AssetManager) : void {
 
-        // TODO: (Re)set terrain
+        const BAR_COLOR_1 = [ "#aaff00", "#ffff55", "#ffaa00", "#aa0000", "#000000" ];
+        const BAR_COLOR_2 = [ "#55aa00", "#aaaa00", "#aa5500", "#550000", "#000000" ];
+        const BAR_OUTER_COLOR = [ "#000000", "#555555" ];
+        const BAR_WIDTH = 40;
+        const BAR_HEIGHT = 7;
+        const BAR_X = 12;
+        const BAR_Y = 5;
+
+        const bmpBase = assets.getBitmap("b");
+        const bmpFont = assets.getBitmap("fw");
+
+        canvas.fillColor("#00000033");
+        canvas.fillRect(0, 0, canvas.width, 16);
+
+        // Score
+        canvas.drawBitmap(bmpBase, canvas.width/2 - 8, 1, 48, 80, 16, 8);
+        canvas.drawText(bmpFont, scoreToString(this.player.getScore()), canvas.width/2, 8, -1, 0, TextAlign.Center);
+        
+        // Orbs
+        canvas.drawBitmap(bmpBase, canvas.width - 40, 4, 32, 88, 8, 8);
+        canvas.drawText(bmpFont, "#" + String(this.player.getOrbs()), canvas.width - 31, 4, -1);
+
+        // Fuel
+
+        canvas.drawBitmap(bmpBase, 2, 4, 40, 88, 8, 8);
+
+        for (let i = 0; i < 2; ++ i) {
+
+            canvas.fillColor(BAR_OUTER_COLOR[i]);
+            canvas.fillRect(BAR_X + i, BAR_Y + i, BAR_WIDTH - i*2, BAR_HEIGHT - i*2);
+        }
+
+        const fillLevel = (this.player.getFuel() * (BAR_WIDTH - 2)) | 0;
+        const barIndex = 3 - Math.round(this.player.getFuel()*3);
+
+        if (fillLevel > 1) {
+
+            canvas.fillColor(BAR_COLOR_2[barIndex]);
+            canvas.fillRect(BAR_X + 1, BAR_Y + 1, fillLevel, BAR_HEIGHT - 2);
+
+            canvas.fillColor(BAR_COLOR_1[barIndex]);
+            canvas.fillRect(BAR_X + 1, BAR_Y + 1, fillLevel - 1, BAR_HEIGHT - 3);
+        }
     }
+
+
+    private drawTransition(canvas : Canvas) : void {
+
+        if (this.transitionTimer <= 0)
+            return;
+
+        let t = this.transitionTimer;
+        if (!this.fadeIn)
+            t = 1.0 - t;
+
+        const radius = (Math.hypot(canvas.width/2, canvas.height/2)*t*t) | 0;
+
+        canvas.fillColor("#000000");
+        canvas.fillCircleOutside(radius);
+    }
+
+
+    // public init(param : SceneParameter, event : ProgramEvent) : void {}
 
 
     public update(event : ProgramEvent) : void {
 
         const CLOUD_BASE_SPEED = 0.25;
         const CLOUD_SPEED_FACTOR = 0.125;
+        const TRANSITION_SPEED = 1.0/30.0;
+
+        if (this.transitionTimer > 0.0) {
+
+            this.transitionTimer -= TRANSITION_SPEED*event.tick;
+            if (this.transitionTimer <= 0.0 &&
+                this.gameOverPhase == 2) {
+
+                this.transitionTimer = 1.0;
+                this.fadeIn = false,
+                this.reset(event);
+            }
+            return;
+        }
 
         if (this.gameOverPhase == 2) {
 
-            if (event.input.getAction("select") == InputState.Pressed) {
+            if (event.input.getAction("s") == InputState.Pressed) {
 
-                this.reset();
+                this.transitionTimer = 1.0;
+                this.fadeIn = true;
             }
             return;
         }
 
         if (this.gameOverPhase == 0 &&
-            event.input.getAction("pause") == InputState.Pressed) {
+            event.input.getAction("p") == InputState.Pressed) {
 
             this.paused = !this.paused;
         }
@@ -153,6 +264,8 @@ export class Game implements Scene {
 
             this.gameOverPhase = 1;
             this.targetSpeed = 0.0;
+            
+            storeScore(this.hiscore = Math.max(this.player.getScore(), this.hiscore));
         }
 
         if (!this.player.doesExist()) {
@@ -173,13 +286,13 @@ export class Game implements Scene {
 
         const SHAKE_TIME = 30;
 
-        const bmpBase = assets.getBitmap("base");
+        const bmpBase = assets.getBitmap("b");
 
         canvas.moveTo();
 
         this.drawBackground(canvas, assets);
 
-        // canvas.drawBitmap(assets.getBitmap("terrain"), 0, 0);
+        // canvas.drawBitmap(assets.getBitmap("t"), 0, 0);
 
         this.camera.use(canvas);
 
@@ -199,14 +312,22 @@ export class Game implements Scene {
 
             this.drawGameOver(canvas, assets);
         }
-        else if (this.paused) {
+        else {
 
-            canvas.fillColor("rgba(0,0,0,0.33)");
-            canvas.fillRect();
+            this.drawHUD(canvas, assets);
+            if (this.paused) {
 
-            canvas.drawText(assets.getBitmap("font_yellow"), "PAUSED", 
-                canvas.width/2, canvas.height/2 - 4, 0, 0, TextAlign.Center);
+                canvas.fillColor("#00000055");
+                canvas.fillRect();
+
+                canvas.drawText(assets.getBitmap("fy"), "PAUSED", 
+                    canvas.width/2, canvas.height/2 - 4, 0, 0, TextAlign.Center);
+            }
         }
+
+
+        
+        this.drawTransition(canvas);
     }
 
 

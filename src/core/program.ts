@@ -84,7 +84,7 @@ export class Program {
         else {
 
             // TODO: Loading text?
-            this.canvas.clear("rgb(0, 85, 170)");
+            this.canvas.clear("#0055aa");
         }
 
         window.requestAnimationFrame(ts => this.loop(ts));

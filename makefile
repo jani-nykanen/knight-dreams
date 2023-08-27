@@ -21,8 +21,8 @@ closure:
 
 
 dist: js closure
-	cp base.png temp/base.png
-	cp font.png temp/font.png
+	cp b.png temp/b.png
+	cp f.png temp/f.png
 	cp index_body.html temp/index_body.html
 	(cd temp; sed -e '/CONTENT/{r out.js' -e 'd}' index_body.html > index.html)
 	rm temp/index_body.html

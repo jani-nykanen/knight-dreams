@@ -18,7 +18,6 @@ export class SpecialPlatform extends ExistingObject {
 
     private pos : Vector;
     private width : number = 0;
-    private height : number = 0;
     private type : SpecialPlatformType = SpecialPlatformType.Mushroom;
 
 
@@ -30,7 +29,7 @@ export class SpecialPlatform extends ExistingObject {
     }
 
 
-    public spawn(x : number, y : number, width : number, type : SpecialPlatformType, height = 0) : void {
+    public spawn(x : number, y : number, width : number, type : SpecialPlatformType) : void {
 
         this.pos.x = x;
         this.pos.y = y;

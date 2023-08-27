@@ -119,7 +119,7 @@ export class Terrain {
 
     public draw(canvas : Canvas, assets : AssetManager) : void {
 
-        const bmpTerrain = assets.getBitmap("terrain");
+        const bmpTerrain = assets.getBitmap("t");
 
         for (let p of this.specialPlatforms) {
 
@@ -150,6 +150,8 @@ export class Terrain {
     }
 
 
+    // Also waste of bytes
+    /*
     public reset() : void {
 
         for (let p of this.specialPlatforms) {
@@ -162,4 +164,5 @@ export class Terrain {
             l.recreate();
         }
     }
+    */
 }

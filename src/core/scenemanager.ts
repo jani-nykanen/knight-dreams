@@ -17,19 +17,17 @@ export class SceneManager {
     }
 
 
-    public addScene(name : string, scene : Scene, makeActive = false) : void {
+    public addScene(name : string, scene : Scene) : void {
 
         this.scenes.set(name, scene);
-        if (makeActive || this.activeScene === undefined) {
-
-            this.activeScene = scene;
-        }
+        this.activeScene = scene;
+        
     }
 
 
     public init(event : ProgramEvent) : void {
 
-        this.activeScene?.init(undefined, event);
+        this.activeScene?.init?.(undefined, event);
     }
 
 
@@ -50,11 +48,12 @@ export class SceneManager {
         const s = this.scenes.get(name);
         if (s === undefined) {
 
-            throw new Error("Error: there is no scene named " + name + " in the scene manager!");
+            // throw new Error("Error: there is no scene named " + name + " in the scene manager!");
+            return;
         }
 
         const param = s.dispose();
         this.activeScene = s;
-        this.activeScene.init(param, event)
+        this.activeScene.init?.(param, event)
     }
 }

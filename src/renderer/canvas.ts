@@ -13,7 +13,7 @@ const createCanvasElement = (width : number, height : number) : [HTMLCanvasEleme
     canvas.setAttribute("style", styleArg);
     canvas.setAttribute(
         "style", 
-        "position: absolute; top: 0; left: 0; z-index: -1;" + 
+        styleArg + 
         "image-rendering: optimizeSpeed;" + 
         "image-rendering: pixelated;" +
         "image-rendering: -moz-crisp-edges;");
@@ -237,17 +237,14 @@ export class Canvas {
     }
 
 
-    public drawBitmap(bmp : Bitmap | undefined, 
+    public drawBitmap(bmp : Bitmap, 
         dx : number = 0, dy : number = 0, 
         sx : number = 0, sy : number = 0, 
-        sw = bmp?.width ?? 0, sh = bmp?.height ?? 0,
+        sw = bmp.width, sh = bmp.height,
         flip = Flip.None) : void {
 
         const c = this.ctx;
         const saveState = flip != Flip.None;
-
-        if (bmp === undefined)
-            return;
 
         dx += this.translation.x;
         dy += this.translation.y;
@@ -286,15 +283,12 @@ export class Canvas {
     }
 
 
-    public drawVerticallyWavingBitmap(bmp : Bitmap | undefined,
+    public drawVerticallyWavingBitmap(bmp : Bitmap,
         dx : number, dy : number, period : number, amplitude : number,
         shift : number) : void {
 
         const c = this.ctx;
 
-        if (bmp === undefined)
-            return;
-            
         let y : number;
         let t : number;
         for (let x = 0; x < bmp.width; ++ x) {
@@ -307,7 +301,7 @@ export class Canvas {
     }
 
 
-    public drawText(font : Bitmap | undefined, str : string, 
+    public drawText(font : Bitmap, str : string, 
         dx : number, dy : number, 
         xoff = 0.0, yoff = 0.0, align = TextAlign.Left) : void {
 

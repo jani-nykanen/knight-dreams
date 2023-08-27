@@ -76,13 +76,10 @@ const convertToMonochrome = (imageData : ImageData,
 
 
 
-const applyPalette = (image : Bitmap | undefined,
+const applyPalette = (image : Bitmap,
     colorTables: (string | undefined) [], packedPalette : string[],
     gridWidth : number = 8, gridHeight : number = 8, 
-    startLine : number = 0, endLine : number = ( (image?.height ?? 0) / gridHeight) | 0) : Bitmap | undefined => {
-
-    if (image === undefined)
-        return undefined;
+    startLine : number = 0, endLine : number = ( (image?.height ?? 0) / gridHeight) | 0) : Bitmap=> {
 
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;

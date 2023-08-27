@@ -7,11 +7,9 @@ import { Canvas } from "../renderer/canvas.js";
 
 
 const TEXT = 
-`WOULD YOU LIKE TO ENABLE
-AUDIO? YOU CANNOT CHANGE
-THIS LATER!
-
-PRESS ENTER TO CONFIRM.`;
+`ENABLE AUDIO? 
+PRESS ENTER TO 
+CONFIRM.`;
 
 
 export class AudioIntro implements Scene {
@@ -58,16 +56,16 @@ export class AudioIntro implements Scene {
     
     public update(event: ProgramEvent) : void {
 
-        if (event.input.getAction("up") == InputState.Pressed ||
-            event.input.getAction("down") == InputState.Pressed) {
+        if (event.input.getAction("u") == InputState.Pressed ||
+            event.input.getAction("d") == InputState.Pressed) {
 
             this.cursorPos = 1 - this.cursorPos;
         }
 
-        if (event.input.getAction("select") == InputState.Pressed) {
+        if (event.input.getAction("s") == InputState.Pressed) {
 
             event.audio.toggle(this.cursorPos == 0);
-            event.scenes.changeScene("game", event);
+            event.scenes.changeScene("g", event);
         }
     }
 
@@ -75,10 +73,10 @@ export class AudioIntro implements Scene {
     public redraw(canvas: Canvas, assets : AssetManager) : void {
 
         const CENTER_Y = 48;
-        const CONFIRM_BOX_CENTER_Y = 112;
-        const MARGIN = 8;
+        const CONFIRM_BOX_CENTER_Y = 96;
+        const MARGIN = 12;
 
-        const fonts = [assets.getBitmap("font_white"), assets.getBitmap("font_yellow")];
+        const fonts = [assets.getBitmap("fw"), assets.getBitmap("fy")];
 
         canvas.clear("#0055aa");
 

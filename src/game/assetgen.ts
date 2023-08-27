@@ -41,8 +41,8 @@ const COLOR_MAP = [
     "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", "1780", 
     "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", "1780", 
     "1J50", "1J50", "1J50", "1J50", "0400", "0400", "0400", "0400",
-    "1540", "1540", "1540", "1E70", "1E70", "1E70", undefined, undefined,
-    "1540", "1540", "1540", "0K20", undefined, undefined, undefined, undefined,
+    "1540", "1540", "1540", "1E70", "1E70", "1E70", "3000", "3000",
+    "1540", "1540", "1540", "0K20", "1FG0", "14C0", undefined, undefined,
 ];
 
 
@@ -54,8 +54,8 @@ const generateFonts = (font : Bitmap | undefined, event : ProgramEvent) : void =
     const fontYellow= BitmapGenerator.applyPalette(font,
         (new Array<string>(16*4)).fill("0003"),
         PALETTE);
-    event.assets.addBitmap("font_white", fontWhite);
-    event.assets.addBitmap("font_yellow", fontYellow);
+    event.assets.addBitmap("fw", fontWhite);
+    event.assets.addBitmap("fy", fontYellow);
 }
 
 
@@ -318,17 +318,17 @@ const generateGameOverText = (c : CanvasRenderingContext2D,
 
 const generate = (event : ProgramEvent) : void => {
 
-    const bmpBase = event.assets.getBitmap("_base");
-    const bmpFont = event.assets.getBitmap("_font");
+    const bmpBase = event.assets.getBitmap("_b");
+    const bmpFont = event.assets.getBitmap("_f");
 
     generateFonts(bmpFont, event);    
 
     const coloredBase = BitmapGenerator.applyPalette(bmpBase, COLOR_MAP, PALETTE);
 
-    event.assets.addBitmap("base", coloredBase);
-    event.assets.addBitmap("terrain", 
+    event.assets.addBitmap("b", coloredBase);
+    event.assets.addBitmap("t", 
         BitmapGenerator.createCustom(256, 128, [coloredBase], generateTerrainTileset));
-    event.assets.addBitmap("sky", 
+    event.assets.addBitmap("s", 
         BitmapGenerator.createCustom(192, 144, [coloredBase], generateSky)); 
 
     const gameoverBase = BitmapGenerator.createCustom(112, 20, [], generateGameOverTextBase,
@@ -336,7 +336,7 @@ const generate = (event : ProgramEvent) : void => {
     const gameoverDark = BitmapGenerator.createCustom(112, 20, [], generateGameOverTextBase,
         [85, 0, 0], 192);
 
-    event.assets.addBitmap("gameover", 
+    event.assets.addBitmap("g", 
         BitmapGenerator.createCustom(114, 22, [gameoverDark, gameoverBase], generateGameOverText));    
 }
 
