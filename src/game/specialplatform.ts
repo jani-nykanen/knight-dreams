@@ -124,6 +124,9 @@ export class SpecialPlatform extends ExistingObject {
 
     public objectCollision(o : GameObject, globalSpeed : number, event : ProgramEvent) : void {
 
+        if (!this.exist)
+            return;
+
         const y = event.screenHeight - this.pos.y;
 
         o.floorCollision(this.pos.x - this.width*8, y, 

@@ -290,6 +290,32 @@ const generateSky = (c : CanvasRenderingContext2D,
 }
 
 
+const generateGameOverTextBase = (c : CanvasRenderingContext2D, 
+    width : number, height : number, bmp : (Bitmap | undefined) []) : void => {
+
+    c.font = "bold 18px Arial";
+    c.textAlign = "center";
+
+    c.fillStyle = "#ffffff";
+    c.fillText("Game Over!", width/2, height - 2);
+}
+
+
+const generateGameOverText = (c : CanvasRenderingContext2D, 
+    width : number, height : number, bmp : (Bitmap | undefined) []) : void => {
+
+    for (let j = -1; j <= 2; ++ j) {
+
+        for (let i = -1; i <= 1; ++ i) {
+
+            c.drawImage(bmp[0], i + 1, j + 1);
+        }
+    }
+    c.drawImage(bmp[1], 1, 1);
+}
+
+
+
 const generate = (event : ProgramEvent) : void => {
 
     const bmpBase = event.assets.getBitmap("_base");
@@ -304,6 +330,14 @@ const generate = (event : ProgramEvent) : void => {
         BitmapGenerator.createCustom(256, 128, [coloredBase], generateTerrainTileset));
     event.assets.addBitmap("sky", 
         BitmapGenerator.createCustom(192, 144, [coloredBase], generateSky)); 
+
+    const gameoverBase = BitmapGenerator.createCustom(112, 20, [], generateGameOverTextBase,
+        [255, 85, 0], 192);
+    const gameoverDark = BitmapGenerator.createCustom(112, 20, [], generateGameOverTextBase,
+        [85, 0, 0], 192);
+
+    event.assets.addBitmap("gameover", 
+        BitmapGenerator.createCustom(114, 22, [gameoverDark, gameoverBase], generateGameOverText));    
 }
 
 

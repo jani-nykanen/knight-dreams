@@ -4,7 +4,7 @@ import { Scene, SceneParameter } from "../core/scene.js";
 import { Canvas, TextAlign } from "../renderer/canvas.js";
 import { InputState } from "../core/input.js";
 import { Terrain } from "./terrain.js";
-import { Player } from "./player.js";
+import { DEATH_TIME, Player } from "./player.js";
 import { Camera } from "./camera.js";
 import { Bitmap } from "../renderer/bitmap.js";
 import { updateSpeedAxis } from "./gameobject.js";
@@ -23,6 +23,7 @@ export class Game implements Scene {
     private targetSpeed : number = 2.0;
 
     private paused : boolean = false;
+    private gameOverPhase : number = 0;
 
 
     constructor(event : ProgramEvent) {
@@ -78,6 +79,37 @@ export class Game implements Scene {
 
         this.globalSpeed = 0.0;
         this.targetSpeed = 2.0;
+
+        this.gameOverPhase = 0;
+    }
+
+
+    private drawGameOver(canvas : Canvas, assets : AssetManager) : void {
+
+        const bmpGameOver = assets.getBitmap("gameover");
+        const fontYellow = assets.getBitmap("font_yellow");
+
+        const dx = canvas.width/2 - 60;
+        const dy = 32;
+        const cx = canvas.width/2;
+
+        if (this.gameOverPhase == 2) {
+
+            canvas.fillColor("rgba(0,0,0,0.67)");
+            canvas.fillRect();
+
+            canvas.drawText(fontYellow, "SCORE: 000000", cx, 80, -1, 0, TextAlign.Center);
+            canvas.drawText(fontYellow, "HI-SCORE: 000000", cx, 96, -1, 0, TextAlign.Center);
+        }
+
+        let t = this.player.getDeathTimer() / DEATH_TIME;
+        if (this.gameOverPhase == 1 && t < 0.5) {
+
+            t = (0.5 - t)*2;
+            canvas.drawFunkyWaveEffectBitmap(bmpGameOver, dx, dy, t*t, 32, 4, 16);
+            return;
+        }
+        canvas.drawBitmap(bmpGameOver, dx, dy);
     }
 
 
@@ -92,21 +124,40 @@ export class Game implements Scene {
         const CLOUD_BASE_SPEED = 0.25;
         const CLOUD_SPEED_FACTOR = 0.125;
 
-        if (event.input.getAction("pause") == InputState.Pressed) {
+        if (this.gameOverPhase == 2) {
+
+            if (event.input.getAction("select") == InputState.Pressed) {
+
+                this.reset();
+            }
+            return;
+        }
+
+        if (this.gameOverPhase == 0 &&
+            event.input.getAction("pause") == InputState.Pressed) {
 
             this.paused = !this.paused;
         }
         if (this.paused)
             return;
 
-        this.globalSpeed = updateSpeedAxis(this.globalSpeed, this.targetSpeed, 1.0/60.0);
+        this.globalSpeed = updateSpeedAxis(
+            this.globalSpeed, 
+            this.targetSpeed, 
+            1.0/60.0*(this.gameOverPhase*2 + 1));
 
         this.terrain.update(this.globalSpeed, event);
 
         this.player.update(this.globalSpeed, event);
-        if (this.player.isDying()) {
+        if (this.gameOverPhase == 0 && this.player.isDying()) {
+
+            this.gameOverPhase = 1;
+            this.targetSpeed = 0.0;
+        }
+
+        if (!this.player.doesExist()) {
             
-            this.reset();
+            this.gameOverPhase = 2;
             return;
         }
 
@@ -120,6 +171,8 @@ export class Game implements Scene {
     
     public redraw(canvas : Canvas, assets : AssetManager) : void {
 
+        const SHAKE_TIME = 30;
+
         const bmpBase = assets.getBitmap("base");
 
         canvas.moveTo();
@@ -130,11 +183,23 @@ export class Game implements Scene {
 
         this.camera.use(canvas);
 
+        if (this.gameOverPhase == 1 &&
+            this.player.getDeathTimer() < SHAKE_TIME) {
+
+            canvas.move(
+                ((Math.random()*2 - 1) * 4) | 0,
+                ((Math.random()*2 - 1) * 4) | 0);
+        }
+
         this.terrain.draw(canvas, assets);
         this.player.draw?.(canvas, bmpBase);
 
         canvas.moveTo();
-        if (this.paused) {
+        if (this.gameOverPhase > 0) {
+
+            this.drawGameOver(canvas, assets);
+        }
+        else if (this.paused) {
 
             canvas.fillColor("rgba(0,0,0,0.33)");
             canvas.fillRect();

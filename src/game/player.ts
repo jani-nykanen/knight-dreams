@@ -8,6 +8,8 @@ import { Sprite } from "../renderer/sprite.js";
 import { GameObject } from "./gameobject.js";
 
 
+export const DEATH_TIME = 60;
+
 
 export class Player extends GameObject {
 
@@ -25,6 +27,8 @@ export class Player extends GameObject {
 
     private spr : Sprite;
     private propeller : Sprite;
+
+    private deathTimer : number = 0;
 
 
     constructor(x : number, y : number) {
@@ -143,6 +147,12 @@ export class Player extends GameObject {
 
             this.pos.x = event.screenWidth - this.hitbox.x/2;
         }
+    
+        if (this.pos.y > event.screenHeight) {
+
+            this.dying = true;
+            this.pos.y = event.screenHeight;
+        }
     }
 
 
@@ -175,6 +185,38 @@ export class Player extends GameObject {
     }
 
 
+    // Wait draw *what* now?
+    private drawDeathBalls(canvas : Canvas) : void {
+
+        const MAX_DISTANCE = 64;
+        const COLORS = ["#5555aa", "#aaaaff" ,"#ffffff"];
+        const RADIUS = [7, 5, 3];
+
+        const shift = (((this.deathTimer / 3) | 0)) % 3;
+
+        const angleShift = Math.PI*2/8;
+        const distance = this.deathTimer/DEATH_TIME * MAX_DISTANCE;
+
+        let dx : number;
+        let dy : number;
+
+        let angle : number;
+        for (let i = 0; i < 8; ++ i) {
+
+            angle = angleShift*i;
+
+            dx = this.pos.x + Math.cos(angle)*distance;
+            dy = this.pos.y + Math.sin(angle)*distance;
+
+            for (let j = 0; j < 3; ++ j) {
+
+                canvas.fillColor(COLORS[(j + shift) % 3]);
+                canvas.fillCircle(dx, dy, RADIUS[j]);
+            }
+        }   
+    }
+
+
     protected updateEvent(globalSpeed : number, event : ProgramEvent) : void {
         
         this.control(event);
@@ -183,18 +225,12 @@ export class Player extends GameObject {
         this.animate(globalSpeed, event);
 
         this.touchSurface = false;
-
-        // TEMP
-        if (this.pos.y > event.screenHeight+16) {
-
-            this.pos.y -= event.screenHeight;
-        }
     }
 
 
     protected die(globalSpeed : number, event : ProgramEvent) : boolean { 
         
-        return false; // Never die! 
+        return (this.deathTimer += event.tick) >= DEATH_TIME;
     }
 
 
@@ -226,6 +262,12 @@ export class Player extends GameObject {
 
         const dx = Math.round(this.pos.x) - 8;
         const dy = Math.round(this.pos.y) - 7;
+
+        if (this.dying) {
+
+            this.drawDeathBalls(canvas);
+            return;
+        }
 
         const sx = SX[this.spr.getFrame()]*16;
         const sy = 40 + SY[this.spr.getFrame()]*8;
@@ -275,7 +317,7 @@ export class Player extends GameObject {
         }
     }
 
-
+    
     public recreate() : void {
 
         this.pos = this.initialPos.clone();
@@ -289,6 +331,7 @@ export class Player extends GameObject {
         this.propellerRelease = false;
         this.ledgeTimer = 0;
         this.jumpTimer = 0;
+        this.deathTimer = 0;
 
         this.spr.setFrame(0);
         this.propeller.setFrame(0);
@@ -296,4 +339,7 @@ export class Player extends GameObject {
         this.dying = false;
         this.exist = true;
     }
+
+
+    public getDeathTimer = () : number => this.deathTimer;
 }
