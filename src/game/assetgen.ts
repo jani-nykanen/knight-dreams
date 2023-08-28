@@ -26,6 +26,8 @@ const PALETTE = [
     "005500ff", // J Dark green
     "aaffffff", // K Bright blue
     "ff0000ff", // L Bright red
+    "005555ff", // M Dark turqoise (is that a word)
+    "55aaaaff", // N Brighter version of the previous color
 ];
 
 
@@ -43,6 +45,8 @@ const COLOR_MAP = [
     "1J50", "1J50", "1J50", "1J50", "0400", "0400", "0400", "0400",
     "1540", "1540", "1540", "1E70", "1E70", "1E70", "3000", "3000",
     "1540", "1540", "1540", "0K20", "1FG0", "14C0", undefined, undefined,
+    "1DC0", "1DC0", undefined, undefined, undefined, undefined, undefined, undefined,
+    "1DC0", "1DC0", undefined, undefined, undefined, undefined, undefined, undefined
 ];
 
 
@@ -326,8 +330,16 @@ const generateOutlinedText = (c : CanvasRenderingContext2D,
 }
 
 
-
 const generate = (event : ProgramEvent) : void => {
+
+    const BALL_NAMES = [ "b1", "b2", "b3", "b4", "b5" ];
+    const BALL_COLORS = [ 
+        ["1KN0", "1MN0", "1MN0", "1MN0"],
+        ["12G0", "1FG0", "1FG0", "1FG0"],
+        ["1KI0", "1HI0", "1HI0", "1HI0"],
+        ["18A0", "19A0", "19A0", "19A0"],
+        ["12C0", "1DC0", "1DC0", "1DC0"],
+    ];
 
     const bmpBase = event.assets.getBitmap("_b");
     const bmpFont = event.assets.getBitmap("_f");
@@ -355,7 +367,21 @@ const generate = (event : ProgramEvent) : void => {
     event.assets.addBitmap("g", 
         BitmapGenerator.createCustom(114, 22, [gameoverDark, gameoverBase], generateOutlinedText));   
     event.assets.addBitmap("l", 
-        BitmapGenerator.createCustom(130, 26, [logoDark, logoBase], generateOutlinedText));    
+        BitmapGenerator.createCustom(130, 26, [logoDark, logoBase], generateOutlinedText));  
+
+    // Not baseball, mind you
+    const baseBall = BitmapGenerator.createCustom(16, 16, [bmpBase],
+        (c : CanvasRenderingContext2D, w : number, h : number, bmps : Bitmap[]) => {
+
+            c.drawImage(bmps[0], 0, 96, 16, 16, 0, 0, 16, 16);
+        });
+
+    for (let i = 0; i < 5; ++ i) {
+
+        event.assets.addBitmap(BALL_NAMES[i], 
+            BitmapGenerator.applyPalette(baseBall, BALL_COLORS[i], PALETTE)
+        );
+    }
 }
 
 

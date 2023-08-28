@@ -224,6 +224,15 @@ export class Game implements Scene {
         }
 
         canvas.drawText(bmpFont, "$2023 JANI NYK%NEN", w/2, h - 9, -1, 0, TextAlign.Center);
+
+        // TEMP, a color test
+        /*
+        canvas.drawBitmap(assets.getBitmap("b1"), 0, 0);
+        canvas.drawBitmap(assets.getBitmap("b2"), 16, 0);
+        canvas.drawBitmap(assets.getBitmap("b3"), 32, 0);
+        canvas.drawBitmap(assets.getBitmap("b4"), 48, 0);
+        canvas.drawBitmap(assets.getBitmap("b5"), 64, 0);
+        */
     }
 
 

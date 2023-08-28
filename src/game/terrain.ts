@@ -60,7 +60,7 @@ export class Terrain {
             return;
 
         let width = sampleUniform(MIN_WIDTH, MAX_WIDTH);
-        if (this.layers[1].getDistanceFromPlatform() <= width/2) {
+        if (this.layers[1].getDistanceFromPlatform() <= width/2 + 1) {
 
             return;
         }
