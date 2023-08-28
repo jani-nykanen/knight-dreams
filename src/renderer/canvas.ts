@@ -59,7 +59,7 @@ export class Canvas {
 
     private translation : Vector;
 
-    private activeColor : string = "ffffffff";
+    private activeColor : string = "#ffffff";
 
     public readonly width : number;
     public readonly height : number;
@@ -305,8 +305,8 @@ export class Canvas {
         dx : number, dy : number, 
         xoff = 0.0, yoff = 0.0, align = TextAlign.Left) : void {
 
-        if (font === undefined)
-            return;
+        //  if (font === undefined)
+        //    return;
 
         const cw = (font.width/16) | 0;
         const ch = cw;
@@ -369,12 +369,12 @@ export class Canvas {
         }
     }
 
-
+/*
     public setAlpha(alpha = 1.0) : void {
 
         this.ctx.globalAlpha = alpha;
     }
-    
+    */
 
     public moveTo(x = 0, y = 0) : void {
 

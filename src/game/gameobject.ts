@@ -117,8 +117,9 @@ export class GameObject extends ExistingObject {
         speedCheckLimit = 0.0) : boolean {
 
         // The case x1 > x2 can be ignored since it never happens anyway
-        if (x1 >= x2)
-            return false;
+        // But to save bytes, let's just pretend it never happens anyway!
+        // if (x1 >= x2)
+        //    return false;
 
         if (!this.exist || this.dying ||
             this.speed.y <= speedCheckLimit ||

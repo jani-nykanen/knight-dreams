@@ -7,11 +7,28 @@ export class Camera {
 
 
     private y : number;
+    private speed : number = 1.0;
 
 
     constructor(y = 0) {
 
-        this.y = 0;
+        this.y = y;
+    }
+
+
+    public reachInitialPoint(event : ProgramEvent) : boolean {
+
+        const DELTA = 0.1;
+        const MAX_SPEED = 4.0;
+
+        this.speed = Math.min(MAX_SPEED, this.speed + DELTA*event.tick);
+
+        if ((this.y += this.speed*event.tick) >= 0) {
+
+            this.y = 0;
+            return true;
+        }
+        return false;
     }
 
 

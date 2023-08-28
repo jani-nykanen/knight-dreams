@@ -57,12 +57,16 @@ export class Game implements Scene {
 
     private hiscore : number = 0;
 
+    private titleScreenActive : boolean = true;
+    private enterTimer : number = 0.49;
+    private gameStarted : boolean = false;
+
 
     constructor(event : ProgramEvent) {
 
         this.terrain = new Terrain(event);
         this.player = new Player(64, event.screenHeight - 40);
-        this.camera = new Camera();
+        this.camera = new Camera(-144);
 
         this.hiscore = getHiscore();
     }
@@ -124,9 +128,9 @@ export class Game implements Scene {
         const bmpGameOver = assets.getBitmap("g");
         const fontYellow = assets.getBitmap("fy");
 
-        const dx = canvas.width/2 - 60;
-        const dy = 32;
         const cx = canvas.width/2;
+        const dx = cx - 60;
+        const dy = 32;
 
         if (this.gameOverPhase == 2) {
 
@@ -135,6 +139,11 @@ export class Game implements Scene {
 
             canvas.drawText(fontYellow, "SCORE: " + scoreToString(this.player.getScore()), cx, 80, -1, 0, TextAlign.Center);
             canvas.drawText(fontYellow, "HI-SCORE: " + scoreToString(this.hiscore), cx, 96, -1, 0, TextAlign.Center);
+
+            if (this.enterTimer >= 0.5) {
+            
+                canvas.drawText(fontYellow, "PRESS ENTER", cx, canvas.height - 24, -1, 0, TextAlign.Center);
+            }
         }
 
         let t = this.player.getDeathTimer() / DEATH_TIME;
@@ -194,6 +203,28 @@ export class Game implements Scene {
             canvas.fillRect(BAR_X + 1, BAR_Y + 1, fillLevel - 1, BAR_HEIGHT - 3);
         }
     }
+    
+
+    private drawTitleScreen(canvas : Canvas, assets : AssetManager) : void {
+
+        const bmpLogo = assets.getBitmap("l");
+        const bmpFont = assets.getBitmap("fy");
+    
+        const w = canvas.width;
+        const h = canvas.height;
+
+        canvas.fillColor("#00000055");
+        canvas.fillRect();
+
+        canvas.drawVerticallyWavingBitmap(bmpLogo, w/2 - bmpLogo.width/2, 32, Math.PI*2, 4, this.enterTimer*Math.PI*2);
+
+        if (this.enterTimer >= 0.5) {
+            
+            canvas.drawText(bmpFont, "PRESS ENTER", w/2, h - 56, -1, 0, TextAlign.Center);
+        }
+
+        canvas.drawText(bmpFont, "$2023 JANI NYK%NEN", w/2, h - 9, -1, 0, TextAlign.Center);
+    }
 
 
     private drawTransition(canvas : Canvas) : void {
@@ -220,6 +251,7 @@ export class Game implements Scene {
         const CLOUD_BASE_SPEED = 0.25;
         const CLOUD_SPEED_FACTOR = 0.125;
         const TRANSITION_SPEED = 1.0/30.0;
+        const ENTER_SPEED = 1.0/60.0;
 
         if (this.transitionTimer > 0.0) {
 
@@ -231,6 +263,27 @@ export class Game implements Scene {
                 this.fadeIn = false,
                 this.reset(event);
             }
+            return;
+        }
+
+        // Yes we also update this when the "Press Enter" text is 
+        // not shown to avoid having to write this twice, thus saving
+        // some precious bytes
+        this.enterTimer = (this.enterTimer + ENTER_SPEED) % 1.0;
+
+        if (this.titleScreenActive) {
+
+            this.cloudPos = (this.cloudPos + CLOUD_BASE_SPEED*event.tick) % 48;
+            if (event.input.getAction("s") == InputState.Pressed) {
+
+                this.titleScreenActive = false;
+            }
+            return;
+        }
+
+        if (!this.gameStarted) {
+
+            this.gameStarted = this.camera.reachInitialPoint(event);
             return;
         }
 
@@ -292,8 +345,6 @@ export class Game implements Scene {
 
         this.drawBackground(canvas, assets);
 
-        // canvas.drawBitmap(assets.getBitmap("t"), 0, 0);
-
         this.camera.use(canvas);
 
         if (this.gameOverPhase == 1 &&
@@ -312,7 +363,7 @@ export class Game implements Scene {
 
             this.drawGameOver(canvas, assets);
         }
-        else {
+        else if (!this.titleScreenActive) {
 
             this.drawHUD(canvas, assets);
             if (this.paused) {
@@ -325,8 +376,11 @@ export class Game implements Scene {
             }
         }
 
+        if (this.titleScreenActive) {
 
-        
+            this.drawTitleScreen(canvas, assets);
+        }
+
         this.drawTransition(canvas);
     }
 

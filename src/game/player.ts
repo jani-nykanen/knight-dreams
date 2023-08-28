@@ -150,11 +150,11 @@ export class Player extends GameObject {
 
     private checkScreenCollisions(event : ProgramEvent) : void {
 
-        if (this.pos.x - this.hitbox.x/2 <= 0) {
+        if (this.speed.x < 0 && this.pos.x - this.hitbox.x/2 <= 0) {
 
             this.pos.x = this.hitbox.x/2;
         }
-        else if (this.pos.x + this.hitbox.x/2 >= event.screenWidth) {
+        else if (this.speed.x > 0 && this.pos.x + this.hitbox.x/2 >= event.screenWidth) {
 
             this.pos.x = event.screenWidth - this.hitbox.x/2;
         }
@@ -203,9 +203,9 @@ export class Player extends GameObject {
         const COLORS = ["#5555aa", "#aaaaff" ,"#ffffff"];
         const RADIUS = [7, 5, 3];
 
-        const shift = (((this.deathTimer / 3) | 0)) % 3;
+        // const shift = (((this.deathTimer / 3) | 0)) % 3;
 
-        const angleShift = Math.PI*2/8;
+        // const angleShift = Math.PI*2/8;
         const distance = this.deathTimer/DEATH_TIME * MAX_DISTANCE;
 
         let dx : number;
@@ -214,14 +214,14 @@ export class Player extends GameObject {
         let angle : number;
         for (let i = 0; i < 8; ++ i) {
 
-            angle = angleShift*i;
+            angle = Math.PI*2/8*i;
 
             dx = this.pos.x + Math.cos(angle)*distance;
             dy = this.pos.y + Math.sin(angle)*distance;
 
             for (let j = 0; j < 3; ++ j) {
 
-                canvas.fillColor(COLORS[(j + shift) % 3]);
+                canvas.fillColor(COLORS[(j + ((((this.deathTimer / 3) | 0)) % 3)) % 3]);
                 canvas.fillCircle(dx, dy, RADIUS[j]);
             }
         }   

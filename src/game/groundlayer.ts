@@ -178,8 +178,8 @@ export class GroundLayer {
         const GAP_JUMP_MAX = 2;
         const BRIDGE_PROB = [0.33, 0];
 
-        let min : number;
-        let max : number;
+        // let min : number;
+        // let max : number;
 
         const [minHeight, maxHeight] = this.getHeightRange();
 
@@ -197,7 +197,6 @@ export class GroundLayer {
 
                     this.activeHeight = sampleUniform(minHeight, maxHeight);
                 }
-
                 this.gapTimer = 0;
             }
             else {
@@ -206,10 +205,12 @@ export class GroundLayer {
                 if (this.layerType == GroundLayerType.Foreground &&
                     this.activeType == TileType.None) {
 
-                    min = Math.max(minHeight, this.activeHeight - GAP_JUMP_MAX);
-                    max = Math.min(maxHeight, this.activeHeight + GAP_JUMP_MAX);
+                    // min = Math.max(minHeight, this.activeHeight - GAP_JUMP_MAX);
+                    // max = Math.min(maxHeight, this.activeHeight + GAP_JUMP_MAX);
 
-                    this.activeHeight = sampleUniform(min, max);
+                    this.activeHeight = sampleUniform(
+                        Math.max(minHeight, this.activeHeight - GAP_JUMP_MAX),  
+                        Math.min(maxHeight, this.activeHeight + GAP_JUMP_MAX));
 
                     // Try to avoid cases where the background layer goes behind
                     // the front layer

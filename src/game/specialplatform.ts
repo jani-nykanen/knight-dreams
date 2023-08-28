@@ -60,7 +60,7 @@ export class SpecialPlatform extends ExistingObject {
 
         const dx = Math.round(this.pos.x);
         const dy = canvas.height - this.pos.y;
-        const mushroomHeight = ((canvas.height - dy) / 16) | 0;
+        // const mushroomHeight = ((canvas.height - dy) / 16) | 0;
 
         let sx : number;
 
@@ -83,7 +83,7 @@ export class SpecialPlatform extends ExistingObject {
             // Ring
             canvas.drawBitmap(bmp, dx - 12, dy + 16, 124, 16, 24, 16);
             // Leg
-            for (let y = 2; y < mushroomHeight; ++ y) {
+            for (let y = 2; y < (((canvas.height - dy) / 16) | 0); ++ y) {
 
                 canvas.drawBitmap(bmp, dx - 8, dy + y*16, 128, 32, 16, 16);
             }

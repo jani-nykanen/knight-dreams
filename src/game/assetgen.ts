@@ -301,7 +301,18 @@ const generateGameOverTextBase = (c : CanvasRenderingContext2D,
 }
 
 
-const generateGameOverText = (c : CanvasRenderingContext2D, 
+const generateLogoBase = (c : CanvasRenderingContext2D, 
+    width : number, height : number, bmp : (Bitmap | undefined) []) : void => {
+
+    c.font = "bold 24px Arial";
+    c.textAlign = "center";
+
+    c.fillStyle = "#ffffff";
+    c.fillText("Game\nTitle", width/2, height - 2);
+}
+
+
+const generateOutlinedText = (c : CanvasRenderingContext2D, 
     width : number, height : number, bmp : (Bitmap | undefined) []) : void => {
 
     for (let j = -1; j <= 2; ++ j) {
@@ -336,8 +347,15 @@ const generate = (event : ProgramEvent) : void => {
     const gameoverDark = BitmapGenerator.createCustom(112, 20, [], generateGameOverTextBase,
         [85, 0, 0], 192);
 
+    const logoBase = BitmapGenerator.createCustom(128, 24, [], generateLogoBase,
+        [255, 85, 0], 192);
+    const logoDark = BitmapGenerator.createCustom(128, 24, [], generateLogoBase,
+        [85, 0, 0], 192);    
+
     event.assets.addBitmap("g", 
-        BitmapGenerator.createCustom(114, 22, [gameoverDark, gameoverBase], generateGameOverText));    
+        BitmapGenerator.createCustom(114, 22, [gameoverDark, gameoverBase], generateOutlinedText));   
+    event.assets.addBitmap("l", 
+        BitmapGenerator.createCustom(130, 26, [logoDark, logoBase], generateOutlinedText));    
 }
 
 
