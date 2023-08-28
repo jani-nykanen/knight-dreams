@@ -1,4 +1,5 @@
 import { Vector } from "../common/vector.js";
+import { AssetManager } from "../core/assets.js";
 import { ProgramEvent } from "../core/event.js";
 import { Bitmap } from "../renderer/bitmap.js";
 import { Canvas } from "../renderer/canvas.js";
@@ -85,7 +86,7 @@ export class GameObject extends ExistingObject {
     }
 
 
-    public draw?(canvas : Canvas, bmp : Bitmap | undefined) : void;
+    public draw?(canvas : Canvas, assets : AssetManager) : void;
 
 
     public forceKill() : void {

@@ -285,6 +285,7 @@ export class Game implements Scene {
             this.cloudPos = (this.cloudPos + CLOUD_BASE_SPEED*event.tick) % 48;
             if (event.input.getAction("s") == InputState.Pressed) {
 
+                event.audio.playSample(event.assets.getSample("as"), 0.60);
                 this.titleScreenActive = false;
             }
             return;
@@ -300,6 +301,7 @@ export class Game implements Scene {
 
             if (event.input.getAction("s") == InputState.Pressed) {
 
+                event.audio.playSample(event.assets.getSample("as"), 0.60);
                 this.transitionTimer = 1.0;
                 this.fadeIn = true;
             }
@@ -309,6 +311,7 @@ export class Game implements Scene {
         if (this.gameOverPhase == 0 &&
             event.input.getAction("p") == InputState.Pressed) {
 
+            event.audio.playSample(event.assets.getSample("as"), 0.60);
             this.paused = !this.paused;
         }
         if (this.paused)
@@ -319,7 +322,7 @@ export class Game implements Scene {
             this.targetSpeed, 
             1.0/60.0*(this.gameOverPhase*2 + 1));
 
-        this.terrain.update(this.globalSpeed, event);
+        this.terrain.update(this.player, this.globalSpeed, event);
 
         this.player.update(this.globalSpeed, event);
         if (this.gameOverPhase == 0 && this.player.isDying()) {
@@ -348,8 +351,6 @@ export class Game implements Scene {
 
         const SHAKE_TIME = 30;
 
-        const bmpBase = assets.getBitmap("b");
-
         canvas.moveTo();
 
         this.drawBackground(canvas, assets);
@@ -365,7 +366,7 @@ export class Game implements Scene {
         }
 
         this.terrain.draw(canvas, assets);
-        this.player.draw?.(canvas, bmpBase);
+        this.player.draw?.(canvas, assets);
 
         canvas.moveTo();
         if (this.gameOverPhase > 0) {

@@ -1,5 +1,6 @@
 import { clamp } from "../common/math.js";
 import { Vector } from "../common/vector.js";
+import { AssetManager } from "../core/assets.js";
 import { ProgramEvent } from "../core/event.js";
 import { InputState } from "../core/input.js";
 import { Bitmap } from "../renderer/bitmap.js";
@@ -61,10 +62,10 @@ export class Player extends GameObject {
         const BASE_GRAVITY = 4.0;
         const JUMP_TIME = 20;
 
-        const PROPELLER_FALL_SPEED = 1.0;
+        const PROPELLER_FALL_SPEED = 0.75;
         const FLY_DELTA = 0.30;
         const FLY_SPEED_MAX = -1.5;
-        const FLY_SPEED_LOW = 2.5;
+        const FLY_SPEED_LOW = 2.0;
         const FLY_TIME = 60;
 
         const FUEL_CONSUMPTION = 1.0/300.0;
@@ -89,7 +90,7 @@ export class Player extends GameObject {
 
             this.propellerRelease = false;
         } 
-        this.propelling = !this.propellerRelease && jumpButtonDown;
+        this.propelling = this.fuel > 0 && !this.propellerRelease && jumpButtonDown;
 
         // Jump
         if (this.ledgeTimer > 0 && jumpButtonState == InputState.Pressed) {
@@ -97,6 +98,8 @@ export class Player extends GameObject {
             this.jumpTimer = JUMP_TIME;
             this.touchSurface = false
             this.ledgeTimer = 0;
+
+            event.audio.playSample(event.assets.getSample("aj"), 0.60);
         }
         else if ((jumpButtonState & InputState.DownOrPressed) == 0) {
 
@@ -161,7 +164,7 @@ export class Player extends GameObject {
     
         if (this.pos.y > event.screenHeight) {
 
-            this.dying = true;
+            this.kill(event);
             this.pos.y = event.screenHeight;
         }
     }
@@ -189,9 +192,15 @@ export class Player extends GameObject {
             this.spr.setFrame(frame);
         }
 
+        const lastFrame = this.propeller.getFrame();
         if (this.propelling) {
 
             this.propeller.animate(0, 3, PROPELLER_SPEED, event.tick);
+            if (this.propeller.getFrame() != lastFrame &&
+                lastFrame  == 0) {
+
+                event.audio.playSample(event.assets.getSample("ap"), 0.60);
+            }
         }
     }
 
@@ -264,7 +273,7 @@ export class Player extends GameObject {
     }
 
 
-    public draw(canvas : Canvas, bmp : Bitmap | undefined) : void {
+    public draw(canvas : Canvas, assets : AssetManager) : void {
 
         const SX = [0, 1, 0, 2, 0, 0, 1];
         const SY = [0, 0, 0, 0, 1, 0, 1];
@@ -285,6 +294,8 @@ export class Player extends GameObject {
             this.drawDeathBalls(canvas);
             return;
         }
+
+        const bmp = assets.getBitmap("b");
 
         const sx = SX[this.spr.getFrame()]*16;
         const sy = 40 + SY[this.spr.getFrame()]*8;
@@ -328,7 +339,11 @@ export class Player extends GameObject {
         if (!this.exist || this.dying)
             return false;
 
-        this.dying = this.doesOverlayRect(new Vector(x + w/2, y + h/2), new Vector(), new Vector(w, h));
+        if (this.doesOverlayRect(new Vector(x + w/2, y + h/2), new Vector(), new Vector(w, h))) {
+
+            this.kill(event);
+        }
+
     }
 
     // This is more memory friendly, but wastes too many bytes...
@@ -360,6 +375,31 @@ export class Player extends GameObject {
         this.exist = true;
     }
     */
+
+
+    // Good naming here, congrats
+    public touchTouchableEvent(isGem : boolean, event : ProgramEvent) : void {
+
+        const FUEL_BONUS = 0.15;
+
+        if (isGem) {
+
+            ++ this.orbs;
+            this.fuel = Math.min(1.0, this.fuel + FUEL_BONUS);
+
+            event.audio.playSample(event.assets.getSample("ag"), 0.60);
+
+            return;
+        }
+        this.kill(event);
+    }
+
+
+    public kill(event : ProgramEvent) : void {
+
+        this.dying = true;
+        event.audio.playSample(event.assets.getSample("ad"), 0.60);
+    }
 
 
     public getDeathTimer = () : number => this.deathTimer;

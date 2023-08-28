@@ -122,8 +122,8 @@ const applyPalette = (image : Bitmap,
 } 
 
 
-const createCustom = (width : number, height : number, params : (Bitmap | undefined) [] | undefined,
-    event : (c : CanvasRenderingContext2D, width : number, height : number, params : (Bitmap | undefined) [] | undefined) => void,
+const createCustom = (width : number, height : number, params : (Bitmap) [] | undefined,
+    event : (c : CanvasRenderingContext2D, width : number, height : number, params : (Bitmap) [] | undefined) => void,
     monochromeColor : [number, number, number] | undefined = undefined, alphaThreshold = 128) : Bitmap => {
 
     const canvas = document.createElement("canvas");

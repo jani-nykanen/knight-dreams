@@ -1,3 +1,4 @@
+import { Ramp } from "../audio/sample.js";
 import { ProgramEvent } from "../core/event.js";
 import { Bitmap, BitmapGenerator } from "../renderer/bitmap.js";
 
@@ -28,6 +29,9 @@ const PALETTE = [
     "ff0000ff", // L Bright red
     "005555ff", // M Dark turqoise (is that a word)
     "55aaaaff", // N Brighter version of the previous color
+    "550055ff", // O Darkish reddish purple
+    "aa55aaff", // P Brighter reddish purple
+    "ffaaffff", // Q Pink
 ];
 
 
@@ -44,13 +48,13 @@ const COLOR_MAP = [
     "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", "1780", 
     "1J50", "1J50", "1J50", "1J50", "0400", "0400", "0400", "0400",
     "1540", "1540", "1540", "1E70", "1E70", "1E70", "3000", "3000",
-    "1540", "1540", "1540", "0K20", "1FG0", "14C0", undefined, undefined,
-    "1DC0", "1DC0", undefined, undefined, undefined, undefined, undefined, undefined,
+    "1540", "1540", "1540", "0K20", "1QP0", "14C0", "1QP0", "1OP0",
+    "1DC0", "1DC0", undefined, undefined, undefined, undefined, "1OP0", "1OP0",
     "1DC0", "1DC0", undefined, undefined, undefined, undefined, undefined, undefined
 ];
 
 
-const generateFonts = (font : Bitmap | undefined, event : ProgramEvent) : void => {
+const generateFonts = (font : Bitmap, event : ProgramEvent) : void => {
 
     const fontWhite = BitmapGenerator.applyPalette(font,
         (new Array<string>(16*4)).fill("0002"),
@@ -64,7 +68,7 @@ const generateFonts = (font : Bitmap | undefined, event : ProgramEvent) : void =
 
 
 const generateTerrainTileset = (c : CanvasRenderingContext2D, 
-    width : number, height : number, bmp : (Bitmap | undefined) []) : void => {
+    width : number, height : number, bmp : (Bitmap) []) : void => {
 
     const base = bmp[0];
 
@@ -242,7 +246,7 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
 
 
 const generateSky = (c : CanvasRenderingContext2D, 
-    width : number, height : number, bmp : (Bitmap | undefined) []) : void => {
+    width : number, height : number, bmp : (Bitmap) []) : void => {
 
     const STARS = [
         [32, 16, 0],
@@ -295,7 +299,7 @@ const generateSky = (c : CanvasRenderingContext2D,
 
 
 const generateGameOverTextBase = (c : CanvasRenderingContext2D, 
-    width : number, height : number, bmp : (Bitmap | undefined) []) : void => {
+    width : number, height : number, bmp : (Bitmap) []) : void => {
 
     c.font = "bold 18px Arial";
     c.textAlign = "center";
@@ -306,7 +310,7 @@ const generateGameOverTextBase = (c : CanvasRenderingContext2D,
 
 
 const generateLogoBase = (c : CanvasRenderingContext2D, 
-    width : number, height : number, bmp : (Bitmap | undefined) []) : void => {
+    width : number, height : number, bmp : (Bitmap) []) : void => {
 
     c.font = "bold 24px Arial";
     c.textAlign = "center";
@@ -317,7 +321,7 @@ const generateLogoBase = (c : CanvasRenderingContext2D,
 
 
 const generateOutlinedText = (c : CanvasRenderingContext2D, 
-    width : number, height : number, bmp : (Bitmap | undefined) []) : void => {
+    width : number, height : number, bmp : (Bitmap) []) : void => {
 
     for (let j = -1; j <= 2; ++ j) {
 
@@ -327,6 +331,96 @@ const generateOutlinedText = (c : CanvasRenderingContext2D,
         }
     }
     c.drawImage(bmp[1], 1, 1);
+}
+
+
+const generateAudio = (event : ProgramEvent) : void => {
+
+    event.assets.addSample("aj",
+        event.audio.createSample(
+            [96,  7, 
+             112, 6, 
+             160, 5, 
+             256, 3], 
+            0.70,
+            "sawtooth", Ramp.Exponential
+        )
+    );
+
+    event.assets.addSample("ag",
+        event.audio.createSample(
+            [128, 3, 
+             200, 4, 
+             320, 10],
+            0.70,
+            "sawtooth", 
+            Ramp.Instant
+        )
+    );
+
+    event.assets.addSample("ap",
+        event.audio.createSample(
+            [96, 2], 0.70,
+            "sawtooth", 
+            Ramp.Instant
+        )
+    );
+
+    event.assets.addSample("ad",
+        event.audio.createSample(
+            [96, 4, 144, 8, 96, 10, 64, 16], 
+            0.50,
+            "square", 
+            Ramp.Exponential, 0.50
+        )
+    );
+
+    event.assets.addSample("as",
+        event.audio.createSample(
+            [224, 16],
+            0.50,
+            "sawtooth", 
+            Ramp.Linear, 0.50
+        )
+    );
+
+    // Old samples from another project, some of them might
+    // work here
+/*
+    event.createSample("die",
+            [[192, 4], [144, 8], [96, 16]],
+            0.70, "square", Ramp.Exponential, 0.20
+        );
+
+    event.createSample("jump",
+            [[96, 8], [112, 7], [160, 6], [256, 4]],
+            0.70, "sawtooth", Ramp.Exponential, 0.20
+        );
+    event.createSample("coin",
+            [[256, 3], [400, 4], [480, 5], [512, 10]],
+            0.70, "square", Ramp.Instant, 0.20
+        );
+        event.createSample("kill",
+            [[320, 4], [192, 6], [96, 10]],
+            0.70, "square", Ramp.Linear, 0.20
+        );
+        event.createSample("pause",
+            [[160, 12]],
+            0.60, "square", Ramp.Linear, 0.20
+        );
+        event.createSample("start",
+            [[224, 16]],
+            0.80, "sawtooth", Ramp.Linear, 0.20
+        );
+        event.createSample("choose",
+            [[256, 4]],
+            0.80, "sawtooth", Ramp.Linear, 0.20
+        );
+    event.createSample("select",
+            [[192, 8]],
+            0.80, "sawtooth", Ramp.Linear, 0.20
+        );
+        */
 }
 
 
@@ -382,6 +476,8 @@ const generate = (event : ProgramEvent) : void => {
             BitmapGenerator.applyPalette(baseBall, BALL_COLORS[i], PALETTE)
         );
     }
+
+    generateAudio(event);
 }
 
 

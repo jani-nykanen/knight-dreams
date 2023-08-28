@@ -53,7 +53,7 @@ export class SpecialPlatform extends ExistingObject {
     }
 
 
-    public draw(canvas : Canvas, bmp : Bitmap | undefined) : void {
+    public draw(canvas : Canvas, bmp : Bitmap) : void {
 
         if (!this.exist)
             return;

@@ -71,6 +71,7 @@ export class GroundLayer {
 
     private spikeWait : number;
     private spikeCount : number = 0;
+    private hadSpike : boolean = false;
 
     private ref : GroundLayer | undefined = undefined;
 
@@ -308,7 +309,7 @@ export class GroundLayer {
         this.updateType();
 
         this.decorations[tilePointer] = Decoration.None;
-        if (!(this.spikes[tilePointer] = this.updateSpikes())) {
+        if (!(this.spikes[tilePointer] = (this.hadSpike = this.updateSpikes()))) {
 
             this.updateDecorations(tilePointer);
         }
@@ -325,7 +326,7 @@ export class GroundLayer {
     }
 
 
-    public draw(canvas : Canvas, bmp : Bitmap | undefined, 
+    public draw(canvas : Canvas, bmp : Bitmap, 
         tilePointer : number, tileOffset : number) : void {
 
         const BRIDGE_Y_OFF = -2;
@@ -511,6 +512,10 @@ export class GroundLayer {
 
     public getHeight = () : number => this.activeHeight;
     public hasGap = () : boolean => this.activeType == TileType.None;
+    public isFlatSurfaceOrBridge = (p : number) : boolean => 
+        this.activeType != TileType.None && 
+        this.activeSlope == SlopeDirection.None &&
+        !this.hadSpike;
 
     
     public getDistanceFromPlatform = () : number => Math.min(this.gapTimer, this.typeWait);

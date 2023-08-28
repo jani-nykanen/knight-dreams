@@ -25,7 +25,7 @@ export class Sample {
 
     constructor(ctx : AudioContext, sequence : number[], 
         baseVolume = 1.0, type : OscillatorType = "square",
-        ramp = Ramp.Exponential, fadeVolumeFactor = 0.5) {
+        ramp = Ramp.Exponential, fadeVolumeFactor = 0.20) {
 
         this.ctx = ctx;
 

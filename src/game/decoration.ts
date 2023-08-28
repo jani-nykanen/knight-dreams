@@ -11,7 +11,7 @@ export const enum Decoration {
 };
 
 
-export const drawDecoration = (canvas : Canvas, bmp : Bitmap | undefined,
+export const drawDecoration = (canvas : Canvas, bmp : Bitmap,
     decoration : Decoration, dx : number, dy : number) : void => {
 
     const SX = [,160, 24, 0];

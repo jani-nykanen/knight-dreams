@@ -19,14 +19,12 @@ export class AssetManager {
         this.bitmaps = new Map<string, Bitmap> ();
         this.samples = new Map<string, Sample> ();
 
+        // Faster than dealing with undefined
         this.emptyImage = new Image(1, 1);
     }
 
 
-    public addBitmap(name : string, bmp : Bitmap | undefined) : void {
-
-        if (bmp === undefined)
-            return;
+    public addBitmap(name : string, bmp : Bitmap) : void {
 
         this.bitmaps.set(name, bmp);
     }
