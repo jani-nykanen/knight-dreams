@@ -8,8 +8,8 @@ import { Decoration, drawDecoration } from "./decoration.js";
 
 export const BASE_SHIFT_X = 2;
 
-const SLOPE_WAIT_MIN = 2;
-const SLOPE_WAIT_MAX = 12;
+const SLOPE_WAIT_MIN = 4;
+const SLOPE_WAIT_MAX = 16;
 
 const MIN_HEIGHT = [1, 2];
 const MAX_HEIGHT = [5, 4];

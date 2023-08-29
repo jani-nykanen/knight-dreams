@@ -13,11 +13,8 @@ import { TouchableObject, TouchableType } from "./touchableobject.js";
 const SPECIAL_WAIT_MIN = 4;
 const SPECIAL_WAIT_MAX = 16;
 
-const GEM_TIMER_MIN = 5;
-const GEM_TIMER_MAX = 20;
-
-const ENEMY_TIMER_MIN = 4;
-const ENEMY_TIMER_MAX = 16;
+const TOUCHABLE_TIMER_MIN = 2;
+const TOUCHABLE_TIMER_MAX = 12;
 
 const GEM_OFF_Y = -10;
 
@@ -33,14 +30,11 @@ export class Terrain {
     private specialPlatforms : SpecialPlatform[];
     private specialWait : number = 0;
 
-    private gems : TouchableObject[];
-    private gemTimer : number;
-    private gemRepeat : number = 0;
-    private gemLayer : number = 0;
-
-    // TODO: Merge with gems?
-    private enemies : TouchableObject[];
-    private enemyTimer : number;
+    private touchables : TouchableObject[];
+    private touchableTimer : number;
+    private touchableRepeat : number = 0;
+    private touchableLayer : number = 0;
+    private touchableType : TouchableType = TouchableType.None;
 
     private readonly width : number;
 
@@ -61,11 +55,8 @@ export class Terrain {
         this.specialWait = sampleUniform(SPECIAL_WAIT_MIN, SPECIAL_WAIT_MAX);
         this.specialPlatforms = new Array<SpecialPlatform> ();
 
-        this.gemTimer = sampleUniform(GEM_TIMER_MIN, GEM_TIMER_MAX);
-        this.gems = new Array<TouchableObject> ();
-
-        this.enemyTimer = sampleUniform(ENEMY_TIMER_MIN, ENEMY_TIMER_MAX);
-        this.enemies = new Array<TouchableObject> ();
+        this.touchableTimer = sampleUniform(TOUCHABLE_TIMER_MIN, TOUCHABLE_TIMER_MAX);
+        this.touchables = new Array<TouchableObject> ();
     }
 
 
@@ -124,85 +115,65 @@ export class Terrain {
 
         let x : number;
         let y : number;
+
         if (Math.random() < GEM_PROB) {
 
             x = opos + 8 - width*16/2 + ((Math.random()*(width)) | 0)*16;
-            y = event.screenHeight - height*16 + GEM_OFF_Y;
+            y = event.screenHeight - height*16 + (this.touchableType == TouchableType.Gem ? GEM_OFF_Y : -8);
             
-            next<TouchableObject>(TouchableObject, this.gems).spawn(x, y, TouchableType.Gem);
+            next<TouchableObject>(TouchableObject, this.touchables).spawn(x, y, this.touchableType);
         }
     }
 
 
-    private spawnGem(event : ProgramEvent) : void {
+    private spawnTouchableObject(event : ProgramEvent) : void {
 
-        const layer = this.gemLayer;
-        next<TouchableObject>(TouchableObject, this.gems)
+        const yoff = this.touchableType == TouchableType.Gem ? GEM_OFF_Y : -8;
+        const layer = this.touchableLayer;
+
+        next<TouchableObject>(TouchableObject, this.touchables)
             .spawn(this.getObjectPos() + 8 - 16*(1 - layer) - 8*layer, 
-                event.screenHeight - this.layers[layer].getHeight()*16 + GEM_OFF_Y,
-                TouchableType.Gem);
+                event.screenHeight - this.layers[layer].getHeight()*16 + yoff, 
+                this.touchableType);
     }
 
 
-    private spawnGems(event : ProgramEvent) : boolean {
+    private spawnTouchables(event : ProgramEvent) : void {
 
-        const GEM_REPEAT_WEIGHT = [0.50, 0.30, 0.20];
+        const REPEAT_WEIGHT = [0.50, 0.30, 0.20];
 
-        if ((-- this.gemRepeat) > 0) {
+        if ((-- this.touchableRepeat) > 0) {
 
-            if (!this.layers[this.gemLayer].isFlatSurfaceOrBridge()) {
+            if (!this.layers[this.touchableLayer].isFlatSurfaceOrBridge() &&
+                !this.layers[this.touchableLayer = 1 - this.touchableLayer].isFlatSurfaceOrBridge()) {
 
-                this.gemRepeat = 0;
+                this.touchableRepeat = 0;
             }
             else {
 
-                this.spawnGem(event);
+                this.spawnTouchableObject(event);
             }
-            return true;
-        }
-
-        if ((-- this.gemTimer) > 0) 
-            return false;
-
-        let layer = (Math.random()*2) | 0;
-        if (!this.layers[layer].isFlatSurfaceOrBridge()) {
-
-            layer = 1 - layer;
-            if (!this.layers[layer].isFlatSurfaceOrBridge()) {
-
-                return false;
-            }
-        }
-
-        this.gemLayer = layer;
-        this.gemRepeat = weightedProbability(GEM_REPEAT_WEIGHT);
-        this.gemTimer = this.gemRepeat + sampleUniform(GEM_TIMER_MIN, GEM_TIMER_MAX);
-
-        this.spawnGem(event);
-
-        return true;
-    }
-
-
-    private spawnEnemy(event : ProgramEvent) : void {
-
-        if ((-- this.enemyTimer) > 0)
-            return;
-
-        let layer = (Math.random()*2) | 0;
-        if (!this.layers[layer].isFlatSurfaceOrBridge() ||
-            !this.layers[layer = 1 - layer].isFlatSurfaceOrBridge()) {
-
             return;
         }
 
-        const type = 2 + ((Math.random()*5) | 0);
-        next<TouchableObject>(TouchableObject, this.gems)
-            .spawn(this.getObjectPos() + 8 - 16*(1 - layer) - 8*layer, 
-                event.screenHeight - this.layers[layer].getHeight()*16 - 8,
-                type as TouchableType);
+        if ((-- this.touchableTimer) > 0) 
+            return;
 
-        this.enemyTimer = sampleUniform(ENEMY_TIMER_MIN, ENEMY_TIMER_MAX);
+        this.touchableLayer = 1 - this.touchableLayer;
+        if (!this.layers[this.touchableLayer].isFlatSurfaceOrBridge() &&
+            !this.layers[this.touchableLayer = 1 - this.touchableLayer].isFlatSurfaceOrBridge()) {
+            
+            return;
+        }
+
+        this.touchableType = this.touchableType == TouchableType.Gem ? 
+            sampleUniform(TouchableType.StaticBall, TouchableType.StoneBall) : 
+            TouchableType.Gem;
+
+        this.touchableRepeat = 1 + weightedProbability(REPEAT_WEIGHT);
+        this.touchableTimer = this.touchableRepeat + sampleUniform(TOUCHABLE_TIMER_MIN, TOUCHABLE_TIMER_MAX);
+
+        this.spawnTouchableObject(event);
     }
 
 
@@ -213,13 +184,7 @@ export class Terrain {
             p.update(globalSpeed, event);
         }
 
-        for (let o of this.gems) {
-
-            o.update(globalSpeed, event);
-            o.playerCollision(globalSpeed, player, event);
-        }
-
-        for (let o of this.enemies) {
+        for (let o of this.touchables) {
 
             o.update(globalSpeed, event);
             o.playerCollision(globalSpeed, player, event);
@@ -235,10 +200,7 @@ export class Terrain {
                 l.update(this.tilePointer);
             }
             this.spawnSpecialPlatform(event);
-            if (!this.spawnGems(event)) {
-                
-                this.spawnEnemy(event);
-            }
+            this.spawnTouchables(event);
 
             this.tilePointer = (this.tilePointer + 1) % this.width;
         }
@@ -259,12 +221,7 @@ export class Terrain {
             this.layers[i].draw(canvas, bmpTerrain, this.tilePointer, this.tileOffset);
         }
 
-        for (let o of this.enemies) {
-
-            o.draw(canvas, assets);
-        }
-
-        for (let o of this.gems) {
+        for (let o of this.touchables) {
 
             o.draw(canvas, assets);
         }

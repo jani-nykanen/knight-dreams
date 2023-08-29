@@ -42,8 +42,17 @@ export class TouchableObject extends GameObject {
         this.exist = false;
 
         this.friction = new Vector(0.15, 0.15);
+    }
 
-        this.hitbox = new Vector(12, 12);
+
+    private kill(player : Player, event : ProgramEvent) : void {
+
+        event.audio.playSample(event.assets.getSample("ak"), 0.50);
+
+        this.dying = true;
+        this.deathTimer = 0.0;
+
+        player.addScore(100);
     }
 
 
@@ -89,6 +98,9 @@ export class TouchableObject extends GameObject {
 
         this.exist = true;
         this.dying = false;
+
+        const w = type == TouchableType.Gem ? 12 : 8;
+        this.hitbox = new Vector(w, w);
     }
 
 
@@ -97,7 +109,7 @@ export class TouchableObject extends GameObject {
         const DEATH_WEIGHT = 0.75;
         const DEATH_RING_RADIUS = 16;
 
-        if (!this.exist)
+        if (!this.exist || this.type == TouchableType.None)
             return;
 
         const bmpBase = assets.getBitmap("b");
@@ -105,38 +117,37 @@ export class TouchableObject extends GameObject {
 
         const dx = Math.round(this.pos.x);
         const dy = Math.round(this.pos.y);
+        const isGem = this.type == TouchableType.Gem;
 
         let t : number;
         if (this.dying) {
 
             t = (1.0 - DEATH_WEIGHT) + this.deathTimer * DEATH_WEIGHT;
 
-            canvas.fillColor("#ffaaff");
+            canvas.fillColor(isGem ? "#ffaaff" : "#ff0000");
             canvas.fillRing(dx, dy, t*t*DEATH_RING_RADIUS, t*DEATH_RING_RADIUS);    
             return;
         }
 
 
-        if (this.type == TouchableType.Gem) {
+        if (isGem) {
 
             canvas.drawBitmap(bmpBase, 
                 dx - 8, 
                 dy - 8 + Math.round(Math.sin(this.specialTimer)*2), 
                 48, 88, 16, 16);
+            return;
         }
-        else if (this.type >= TouchableType.StaticBall && 
-            this.type <= TouchableType.StoneBall) {
 
-            bmpBody = assets.getBitmap("b" + String(this.type-1));
-            canvas.drawBitmap(bmpBody, dx - 8, dy - 6);
-        }
+        bmpBody = assets.getBitmap("b" + String(this.type-1));
+        canvas.drawBitmap(bmpBody, dx - 8, dy - 6);
     }
 
 
     public playerCollision(globalSpeed : number, player : Player, event : ProgramEvent) : void {
 
         const STOMP_W = 20;
-        const STOMP_Y = -4;
+        const STOMP_Y = -6;
 
         if (!this.exist || !player.doesExist() || this.isDying() || player.isDying())
             return;
@@ -146,13 +157,18 @@ export class TouchableObject extends GameObject {
         let stompx = this.pos.x - STOMP_W/2;
         let stompy = this.pos.y + STOMP_Y;
 
+        if (!isGem && player.doesOverlaySpear(this)) {
+
+            this.kill(player, event);
+            return;
+        }
+
         if (!isGem &&
-            player.floorCollision(stompx, stompy, stompx + STOMP_W, stompy, globalSpeed,
+            player.floorCollision(stompx, stompy, 
+                stompx + STOMP_W, stompy, globalSpeed,
                 event, 1, 1, -1.0)) {
 
-            this.dying = true;
-            this.deathTimer = 0.0;
-
+            this.kill(player, event);
             player.stompJump();
 
             return;

@@ -7,7 +7,7 @@ import { AudioIntro } from "./game/audiointro.js";
 
 const initialEvent = (event : ProgramEvent) : void => {
 
-    event.audio.setGlobalVolume(0.60);
+    event.audio.setGlobalVolume(0.40);
 
     // Yes, I had to manually shorten these names to save
     // some bytes. It's ugly, but necessary
@@ -18,6 +18,7 @@ const initialEvent = (event : ProgramEvent) : void => {
     event.input.addAction("d", ["ArrowDown"]);
     event.input.addAction("s", ["Enter", "Space"]);
     event.input.addAction("j", ["ArrowUp"]);
+    event.input.addAction("t", ["Space"]);
     event.input.addAction("p", ["Enter"]);
 
     event.scenes.addScene("g", new Game(event));

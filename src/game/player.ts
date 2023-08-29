@@ -31,6 +31,9 @@ export class Player extends GameObject {
 
     private deathTimer : number = 0;
 
+    private spearPos : Vector;
+    private throwTimer : number = 0;
+
     private fuel : number = 1.0;
     // Yes, we store this here, I don't have room for another
     // class
@@ -44,15 +47,30 @@ export class Player extends GameObject {
         super(x, y);
 
         this.friction = new Vector(0.15, 0.15);
-        this.hitbox = new Vector(12, 16);
-        this.center = new Vector();
+        this.hitbox = new Vector(12, 12);
+        this.center = new Vector(0, 2);
 
         this.spr = new Sprite();
         this.propeller = new Sprite();
     
         this.exist = true;
 
+        this.spearPos = new Vector();
+        this.computeSpearPos();
+
         // this.initialPos = new Vector(x, y);
+    }
+
+
+    private computeSpearPos() : void {
+
+        const TIP_DISTANCE = 24;
+        const THROW_DISTANCE = 64;
+
+        const throwPos = Math.sin((1.0 - this.throwTimer) * Math.PI)*THROW_DISTANCE;
+
+        this.spearPos.x = this.pos.x + TIP_DISTANCE + throwPos;
+        this.spearPos.y = this.pos.y + 3; 
     }
 
 
@@ -131,12 +149,24 @@ export class Player extends GameObject {
 
             this.propellerTimer = 0;
         }
+
+        const throwState = event.input.getAction("t");
+        if (this.throwTimer <= 0 && throwState == InputState.Pressed) {
+
+            this.throwTimer = 1.0;
+            event.audio.playSample(event.assets.getSample("aa"), 0.60);
+        }
+        else if (this.throwTimer > 0.5 && (throwState & InputState.DownOrPressed) == 0) {
+
+            this.throwTimer = 1.0 - this.throwTimer; 
+        }
     }
 
 
     private updateTimers(event : ProgramEvent) : void {
 
         const JUMP_SPEED = 2.75;
+        const THROW_SPEED = 1.0/60.0;
 
         if (this.jumpTimer > 0) {
 
@@ -147,6 +177,11 @@ export class Player extends GameObject {
         if (this.ledgeTimer > 0) {
 
             this.ledgeTimer -= event.tick;
+        }
+
+        if (this.throwTimer > 0.0) {
+
+            this.throwTimer -= THROW_SPEED*event.tick;
         }
     }
 
@@ -237,6 +272,29 @@ export class Player extends GameObject {
     }
 
 
+    private drawSpear(canvas : Canvas, bmp : Bitmap) : void {
+
+        // Need to re-compute this for reasons
+        this.computeSpearPos();
+
+        const px = Math.round(this.pos.x);
+
+        const dx = Math.round(this.spearPos.x);
+        const dy = Math.round(this.spearPos.y);
+
+        const w = dx - px;
+
+        canvas.fillColor("#000000");
+        canvas.fillRect(px, dy - 1, w, 3);
+
+        canvas.fillColor("#aa5500");
+        canvas.fillRect(px, dy, w, 1);
+
+        // Spear tip
+        canvas.drawBitmap(bmp, dx - 8, dy - 3, 0, 112, 16, 8);
+    }
+
+
     protected updateEvent(globalSpeed : number, event : ProgramEvent) : void {
         
         this.control(event);
@@ -249,8 +307,10 @@ export class Player extends GameObject {
         if ((this.scoreTimer += globalSpeed*event.tick) >= 60) {
 
             this.scoreTimer -= 60;
-            this.score += (10*(1.0 + this.orbs/10.0)) | 0;
+            this.addScore(10);
         }
+
+        this.computeSpearPos();
     }
 
 
@@ -300,6 +360,8 @@ export class Player extends GameObject {
         const sx = SX[this.spr.getFrame()]*16;
         const sy = 40 + SY[this.spr.getFrame()]*8;
         const fsx = FEATHER[this.spr.getFrame()]*16
+
+        this.drawSpear(canvas, bmp);
 
         // Body
         canvas.drawBitmap(bmp, dx, dy, 48, 32, 16, 16);
@@ -408,6 +470,15 @@ export class Player extends GameObject {
         
         this.speed.y = STOMP_SPEED;
     }
+
+
+    public addScore(count : number) : void {
+
+        this.score += (count*(1.0 + this.orbs/10.0)) | 0;
+    }   
+
+    
+    public doesOverlaySpear = (o : GameObject) : boolean => o.doesOverlayRect(this.spearPos, new Vector(), new Vector(16, 8));
 
 
     public getDeathTimer = () : number => this.deathTimer;

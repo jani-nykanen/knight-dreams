@@ -50,7 +50,8 @@ const COLOR_MAP = [
     "1540", "1540", "1540", "1E70", "1E70", "1E70", "3000", "3000",
     "1540", "1540", "1540", "0K20", "1QP0", "14C0", "1QP0", "1OP0",
     "1DC0", "1DC0", undefined, undefined, undefined, undefined, "1OP0", "1OP0",
-    "1DC0", "1DC0", undefined, undefined, undefined, undefined, undefined, undefined
+    "1DC0", "1DC0", undefined, undefined, undefined, undefined, undefined, undefined,
+    "1DC0", "12C0", undefined, undefined, undefined, undefined, undefined, undefined,
 ];
 
 
@@ -380,7 +381,25 @@ const generateAudio = (event : ProgramEvent) : void => {
             [224, 16],
             0.50,
             "sawtooth", 
-            Ramp.Linear, 0.50
+            Ramp.Linear
+        )
+    );
+
+    event.assets.addSample("ak",
+        event.audio.createSample(
+            [320, 4, 192, 6, 80, 8],
+            0.60,
+            "square", 
+            Ramp.Exponential, 0.30
+        )
+    );
+
+    event.assets.addSample("aa",
+        event.audio.createSample(
+            [128, 4, 256, 6],
+            0.70,
+            "sawtooth", 
+            Ramp.Exponential
         )
     );
 
