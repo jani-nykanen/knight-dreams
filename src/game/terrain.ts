@@ -13,8 +13,13 @@ import { TouchableObject, TouchableType } from "./touchableobject.js";
 const SPECIAL_WAIT_MIN = 4;
 const SPECIAL_WAIT_MAX = 16;
 
-const GEM_TIMER_MIN = 4;
-const GEM_TIMER_MAX = 16;
+const GEM_TIMER_MIN = 5;
+const GEM_TIMER_MAX = 20;
+
+const ENEMY_TIMER_MIN = 4;
+const ENEMY_TIMER_MAX = 16;
+
+const GEM_OFF_Y = -10;
 
 
 export class Terrain {
@@ -32,6 +37,10 @@ export class Terrain {
     private gemTimer : number;
     private gemRepeat : number = 0;
     private gemLayer : number = 0;
+
+    // TODO: Merge with gems?
+    private enemies : TouchableObject[];
+    private enemyTimer : number;
 
     private readonly width : number;
 
@@ -54,13 +63,16 @@ export class Terrain {
 
         this.gemTimer = sampleUniform(GEM_TIMER_MIN, GEM_TIMER_MAX);
         this.gems = new Array<TouchableObject> ();
+
+        this.enemyTimer = sampleUniform(ENEMY_TIMER_MIN, ENEMY_TIMER_MAX);
+        this.enemies = new Array<TouchableObject> ();
     }
 
 
     private getObjectPos = () : number => this.width*16 - BASE_SHIFT_X*16 + (this.tileOffset % 16);
 
 
-    private spawnSpecialPlatform() : void {
+    private spawnSpecialPlatform(event : ProgramEvent) : void {
 
         const MIN_HEIGHT = 3;
         const MAX_HEIGHT = 5;
@@ -71,6 +83,8 @@ export class Terrain {
         const MUSHROOM_MAX_HEIGHT = 6;
         
         const TYPE_PROB = [0.75, 0.25];
+
+        const GEM_PROB = 0.25;
 
         if ((-- this.specialWait) > 0)
             return;
@@ -102,16 +116,25 @@ export class Terrain {
             type = SpecialPlatformType.FloatingPlatform;
         }
 
+        const opos = this.getObjectPos();
         next<SpecialPlatform>(SpecialPlatform, this.specialPlatforms)
-            .spawn(this.getObjectPos(), height*16, width, type);
+            .spawn(opos, height*16, width, type);
 
         this.specialWait = sampleUniform(width + 2, SPECIAL_WAIT_MAX);
+
+        let x : number;
+        let y : number;
+        if (Math.random() < GEM_PROB) {
+
+            x = opos + 8 - width*16/2 + ((Math.random()*(width)) | 0)*16;
+            y = event.screenHeight - height*16 + GEM_OFF_Y;
+            
+            next<TouchableObject>(TouchableObject, this.gems).spawn(x, y, TouchableType.Gem);
+        }
     }
 
 
     private spawnGem(event : ProgramEvent) : void {
-
-        const GEM_OFF_Y = -10;
 
         const layer = this.gemLayer;
         next<TouchableObject>(TouchableObject, this.gems)
@@ -121,7 +144,9 @@ export class Terrain {
     }
 
 
-    private spawnGems(event : ProgramEvent) : void {
+    private spawnGems(event : ProgramEvent) : boolean {
+
+        const GEM_REPEAT_WEIGHT = [0.50, 0.30, 0.20];
 
         if ((-- this.gemRepeat) > 0) {
 
@@ -133,11 +158,11 @@ export class Terrain {
 
                 this.spawnGem(event);
             }
-            return;
+            return true;
         }
 
         if ((-- this.gemTimer) > 0) 
-            return;
+            return false;
 
         let layer = (Math.random()*2) | 0;
         if (!this.layers[layer].isFlatSurfaceOrBridge()) {
@@ -145,15 +170,39 @@ export class Terrain {
             layer = 1 - layer;
             if (!this.layers[layer].isFlatSurfaceOrBridge()) {
 
-                return;
+                return false;
             }
         }
 
         this.gemLayer = layer;
-        this.gemRepeat = sampleUniform(1, 3);
+        this.gemRepeat = weightedProbability(GEM_REPEAT_WEIGHT);
         this.gemTimer = this.gemRepeat + sampleUniform(GEM_TIMER_MIN, GEM_TIMER_MAX);
 
         this.spawnGem(event);
+
+        return true;
+    }
+
+
+    private spawnEnemy(event : ProgramEvent) : void {
+
+        if ((-- this.enemyTimer) > 0)
+            return;
+
+        let layer = (Math.random()*2) | 0;
+        if (!this.layers[layer].isFlatSurfaceOrBridge() ||
+            !this.layers[layer = 1 - layer].isFlatSurfaceOrBridge()) {
+
+            return;
+        }
+
+        const type = 2 + ((Math.random()*5) | 0);
+        next<TouchableObject>(TouchableObject, this.gems)
+            .spawn(this.getObjectPos() + 8 - 16*(1 - layer) - 8*layer, 
+                event.screenHeight - this.layers[layer].getHeight()*16 - 8,
+                type as TouchableType);
+
+        this.enemyTimer = sampleUniform(ENEMY_TIMER_MIN, ENEMY_TIMER_MAX);
     }
 
 
@@ -167,7 +216,13 @@ export class Terrain {
         for (let o of this.gems) {
 
             o.update(globalSpeed, event);
-            o.playerCollision(player, event);
+            o.playerCollision(globalSpeed, player, event);
+        }
+
+        for (let o of this.enemies) {
+
+            o.update(globalSpeed, event);
+            o.playerCollision(globalSpeed, player, event);
         }
 
         if ((this.tileOffset += globalSpeed*event.tick) >= 16) {
@@ -179,8 +234,11 @@ export class Terrain {
 
                 l.update(this.tilePointer);
             }
-            this.spawnSpecialPlatform();
-            this.spawnGems(event);
+            this.spawnSpecialPlatform(event);
+            if (!this.spawnGems(event)) {
+                
+                this.spawnEnemy(event);
+            }
 
             this.tilePointer = (this.tilePointer + 1) % this.width;
         }
@@ -199,6 +257,11 @@ export class Terrain {
         for (let i = 1; i >= 0; -- i) {
 
             this.layers[i].draw(canvas, bmpTerrain, this.tilePointer, this.tileOffset);
+        }
+
+        for (let o of this.enemies) {
+
+            o.draw(canvas, assets);
         }
 
         for (let o of this.gems) {

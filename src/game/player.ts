@@ -402,6 +402,14 @@ export class Player extends GameObject {
     }
 
 
+    public stompJump() : void {
+
+        const STOMP_SPEED = -3.0;
+        
+        this.speed.y = STOMP_SPEED;
+    }
+
+
     public getDeathTimer = () : number => this.deathTimer;
     public getFuel = () : number => this.fuel;
     public getScore = () : number => this.score;

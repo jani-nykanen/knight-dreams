@@ -101,6 +101,7 @@ export class TouchableObject extends GameObject {
             return;
 
         const bmpBase = assets.getBitmap("b");
+        let bmpBody : Bitmap;
 
         const dx = Math.round(this.pos.x);
         const dy = Math.round(this.pos.y);
@@ -115,28 +116,47 @@ export class TouchableObject extends GameObject {
             return;
         }
 
-        switch (this.type) {
 
-        case TouchableType.Gem:
+        if (this.type == TouchableType.Gem) {
 
             canvas.drawBitmap(bmpBase, 
                 dx - 8, 
                 dy - 8 + Math.round(Math.sin(this.specialTimer)*2), 
                 48, 88, 16, 16);
-            break;
+        }
+        else if (this.type >= TouchableType.StaticBall && 
+            this.type <= TouchableType.StoneBall) {
 
-        default:
-            break;
+            bmpBody = assets.getBitmap("b" + String(this.type-1));
+            canvas.drawBitmap(bmpBody, dx - 8, dy - 6);
         }
     }
 
 
-    public playerCollision(player : Player, event : ProgramEvent) : void {
+    public playerCollision(globalSpeed : number, player : Player, event : ProgramEvent) : void {
+
+        const STOMP_W = 20;
+        const STOMP_Y = -4;
 
         if (!this.exist || !player.doesExist() || this.isDying() || player.isDying())
             return;
 
         const isGem = this.type == TouchableType.Gem;
+
+        let stompx = this.pos.x - STOMP_W/2;
+        let stompy = this.pos.y + STOMP_Y;
+
+        if (!isGem &&
+            player.floorCollision(stompx, stompy, stompx + STOMP_W, stompy, globalSpeed,
+                event, 1, 1, -1.0)) {
+
+            this.dying = true;
+            this.deathTimer = 0.0;
+
+            player.stompJump();
+
+            return;
+        }
 
         if (this.doesOverlay(player)) {
 

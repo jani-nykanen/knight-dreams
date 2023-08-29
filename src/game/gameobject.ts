@@ -114,8 +114,8 @@ export class GameObject extends ExistingObject {
     public floorCollision(x1 : number, y1 : number, x2 : number, y2 : number, 
         globalSpeed : number, event : ProgramEvent,
         leftMargin = 1, rightMargin = 1, 
-        topMargin = 2, bottomMargin = 8,
-        speedCheckLimit = 0.0) : boolean {
+        speedCheckLimit = 0.0,
+        topMargin = 2, bottomMargin = 8) : boolean {
 
         // The case x1 > x2 can be ignored since it never happens anyway
         // But to save bytes, let's just pretend it never happens anyway!
