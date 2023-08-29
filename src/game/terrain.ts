@@ -30,6 +30,8 @@ export class Terrain {
 
     private gems : TouchableObject[];
     private gemTimer : number;
+    private gemRepeat : number = 0;
+    private gemLayer : number = 0;
 
     private readonly width : number;
 
@@ -107,30 +109,51 @@ export class Terrain {
     }
 
 
-    private spawnGems(event : ProgramEvent) : void {
+    private spawnGem(event : ProgramEvent) : void {
 
         const GEM_OFF_Y = -10;
+
+        const layer = this.gemLayer;
+        next<TouchableObject>(TouchableObject, this.gems)
+            .spawn(this.getObjectPos() + 8 - 16*(1 - layer) - 8*layer, 
+                event.screenHeight - this.layers[layer].getHeight()*16 + GEM_OFF_Y,
+                TouchableType.Gem);
+    }
+
+
+    private spawnGems(event : ProgramEvent) : void {
+
+        if ((-- this.gemRepeat) > 0) {
+
+            if (!this.layers[this.gemLayer].isFlatSurfaceOrBridge()) {
+
+                this.gemRepeat = 0;
+            }
+            else {
+
+                this.spawnGem(event);
+            }
+            return;
+        }
 
         if ((-- this.gemTimer) > 0) 
             return;
 
-        const t = this.tilePointer;
         let layer = (Math.random()*2) | 0;
-        if (!this.layers[layer].isFlatSurfaceOrBridge(t)) {
+        if (!this.layers[layer].isFlatSurfaceOrBridge()) {
 
             layer = 1 - layer;
-            if (!this.layers[layer].isFlatSurfaceOrBridge(t)) {
+            if (!this.layers[layer].isFlatSurfaceOrBridge()) {
 
                 return;
             }
         }
 
-        next<TouchableObject>(TouchableObject, this.gems)
-            .spawn(this.getObjectPos() + 8 - 16*(1 - layer) - 8*layer, 
-                event.screenHeight - this.layers[layer].getHeight()*16 + GEM_OFF_Y,
-                TouchableType.Gem);
+        this.gemLayer = layer;
+        this.gemRepeat = sampleUniform(1, 3);
+        this.gemTimer = this.gemRepeat + sampleUniform(GEM_TIMER_MIN, GEM_TIMER_MAX);
 
-        this.gemTimer = sampleUniform(GEM_TIMER_MIN, GEM_TIMER_MAX);
+        this.spawnGem(event);
     }
 
 

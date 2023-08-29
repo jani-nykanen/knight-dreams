@@ -75,11 +75,8 @@ const convertToMonochrome = (imageData : ImageData,
 } 
 
 
-
 const applyPalette = (image : Bitmap,
-    colorTables: (string | undefined) [], packedPalette : string[],
-    gridWidth : number = 8, gridHeight : number = 8, 
-    startLine : number = 0, endLine : number = ( (image?.height ?? 0) / gridHeight) | 0) : Bitmap=> {
+    colorTables: (string | undefined) [], packedPalette : string[]) : Bitmap=> {
 
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -91,8 +88,8 @@ const applyPalette = (image : Bitmap,
 
     const imageData = ctx.getImageData(0, 0, image.width, image.height);
 
-    const w = (canvas.width / gridWidth) | 0;
-    const h = (canvas.height / gridHeight) | 0;
+    const w = (canvas.width / 8) | 0;
+    const h = (canvas.height / 8) | 0;
 
     // Faster than accessing image each tile?
     const imgWidth = image.width;
@@ -101,7 +98,7 @@ const applyPalette = (image : Bitmap,
     let colorTable : number[];
 
     let j = 0;
-    for (let y = Math.max(0, startLine); y < Math.min(y + h, endLine + 1); ++ y) {
+    for (let y = 0; y < h; ++ y) {
 
         for (let x = 0; x < w; ++ x) {
 
@@ -110,7 +107,7 @@ const applyPalette = (image : Bitmap,
 
             colorTable = (colorTables[j] ?? "0000").split("").map((s : string) => parseInt(s, 32));
             convertTile(imageData, 
-                x*gridWidth, y*gridWidth, gridWidth, gridHeight, 
+                x*8, y*8, 8, 8, 
                 imgWidth, colorTable, palette);
 
             ++ j;

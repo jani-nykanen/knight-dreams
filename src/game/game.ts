@@ -79,11 +79,10 @@ export class Game implements Scene {
         const CAMERA_SHIFT_FACTOR = 0.25;
 
         const bmpBase = assets.getBitmap("b");
-        const bmpSky = assets.getBitmap("s");
 
-        canvas.drawBitmap(bmpSky);
+        canvas.drawBitmap(assets.getBitmap("s"));
 
-        canvas.move(0, -Math.round(this.camera.getPosition()*CAMERA_SHIFT_FACTOR));
+        canvas.move(0,-Math.round(this.camera.getPosition()*CAMERA_SHIFT_FACTOR));
 
         // Clouds
         canvas.fillColor("#ffffff");
@@ -264,8 +263,8 @@ export class Game implements Scene {
 
         if (this.transitionTimer > 0.0) {
 
-            this.transitionTimer -= TRANSITION_SPEED*event.tick;
-            if (this.transitionTimer <= 0.0 &&
+            // this.transitionTimer -= TRANSITION_SPEED*event.tick;
+            if ((this.transitionTimer -= TRANSITION_SPEED*event.tick) <= 0.0 &&
                 this.gameOverPhase == 2) {
 
                 this.transitionTimer = 1.0;
@@ -278,7 +277,7 @@ export class Game implements Scene {
         // Yes we also update this when the "Press Enter" text is 
         // not shown to avoid having to write this twice, thus saving
         // some precious bytes
-        this.enterTimer = (this.enterTimer + ENTER_SPEED) % 1.0;
+        this.enterTimer = (this.enterTimer + ENTER_SPEED*event.tick) % 1.0;
 
         if (this.titleScreenActive) {
 
@@ -394,10 +393,5 @@ export class Game implements Scene {
         this.drawTransition(canvas);
     }
 
-
-    public dispose() : SceneParameter {
-        
-        return undefined;
-    } 
 }
 

@@ -50,9 +50,6 @@ export class AudioIntro implements Scene {
         }
     }
 
-
-    public init(param : SceneParameter, event : ProgramEvent) : void { }
-
     
     public update(event: ProgramEvent) : void {
 
@@ -65,7 +62,7 @@ export class AudioIntro implements Scene {
         if (event.input.getAction("s") == InputState.Pressed) {
 
             event.audio.toggle(this.cursorPos == 0);
-            event.scenes.changeScene("g", event);
+            event.scenes.changeScene("g");
         }
     }
 
@@ -97,8 +94,5 @@ export class AudioIntro implements Scene {
             canvas.drawText(fonts[Number(active)], text, canvas.width/2 - 18, CONFIRM_BOX_CENTER_Y - 10 + i*10, -1, 0);
         } 
     }
-
-
-    public dispose = () : SceneParameter => undefined;
 
 }

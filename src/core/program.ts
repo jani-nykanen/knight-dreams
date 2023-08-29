@@ -56,7 +56,7 @@ export class Program {
         if (loaded && !this.initialized) {
 
             this.onloadEvent?.(this.event);
-            this.scenes.init(this.event);
+            // this.scenes.init(this.event);
             this.initialized = true;
         }
 

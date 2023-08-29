@@ -73,7 +73,7 @@ export class GroundLayer {
     private spikeCount : number = 0;
     private hadSpike : boolean = false;
 
-    private ref : GroundLayer | undefined = undefined;
+    private ref : GroundLayer = this; // Saves space vs undefined
 
     private readonly layerType : GroundLayerType;
     private readonly width : number;
@@ -108,8 +108,8 @@ export class GroundLayer {
         let max = MAX_HEIGHT[this.layerType as number];
         if (this.layerType == GroundLayerType.Background) {
 
-            min += this.ref?.activeHeight ?? 0;
-            max += this.ref?.activeHeight ?? 0;
+            min += this.ref.activeHeight ?? 0;
+            max += this.ref.activeHeight ?? 0;
         }
         return [min, max];
     }
@@ -135,8 +135,8 @@ export class GroundLayer {
             this.layerType == GroundLayerType.Background) {
 
             // TODO: Add slope direction to the ref height?
-            dif = this.activeHeight - this.ref?.activeHeight;
-            if ((this.ref?.activeSlope == SlopeDirection.Up &&
+            dif = this.activeHeight - this.ref.activeHeight;
+            if ((this.ref.activeSlope == SlopeDirection.Up &&
                 dif <= 2) || dif <= 1) {
 
                 this.activeSlope = SlopeDirection.Up;
@@ -202,7 +202,7 @@ export class GroundLayer {
             }
             else {
 
-                this.activeType = Math.random() < BRIDGE_PROB[this.layerType as number] ? TileType.Bridge : TileType.None;
+                this.activeType = (!this.hadSpike && Math.random() < BRIDGE_PROB[this.layerType as number]) ? TileType.Bridge : TileType.None;
                 if (this.layerType == GroundLayerType.Foreground &&
                     this.activeType == TileType.None) {
 
@@ -246,7 +246,7 @@ export class GroundLayer {
             this.activeType != TileType.Surface ||
             this.activeSlope != SlopeDirection.None ||
             (this.layerType == GroundLayerType.Foreground &&
-             this.ref?.activeType !== TileType.None))
+             this.ref.activeType !== TileType.None))
             return false;
 
         let type = (weightedProbability(DECORATION_PROB_WEIGHTS) + 1) as Decoration;
@@ -255,8 +255,8 @@ export class GroundLayer {
         // Note: the following expression has some unnecessary question marks after ref
         // to silent Closure...
         if (this.layerType == GroundLayerType.Foreground && 
-            this.ref?.activeType == TileType.Surface &&
-            this.ref?.activeHeight - this.activeHeight <= 2) {
+            this.ref.activeType == TileType.Surface &&
+            this.ref.activeHeight - this.activeHeight <= 2) {
 
             type = Decoration.BigBush;
         }
@@ -512,7 +512,7 @@ export class GroundLayer {
 
     public getHeight = () : number => this.activeHeight;
     public hasGap = () : boolean => this.activeType == TileType.None;
-    public isFlatSurfaceOrBridge = (p : number) : boolean => 
+    public isFlatSurfaceOrBridge = () : boolean => 
         this.activeType != TileType.None && 
         this.activeSlope == SlopeDirection.None &&
         !this.hadSpike;

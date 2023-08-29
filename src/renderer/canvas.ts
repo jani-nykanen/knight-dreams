@@ -140,8 +140,7 @@ export class Canvas {
 
             ny = y/radius;
 
-            r = Math.round(Math.sqrt(1 - ny*ny) * radius);
-            if (r <= 0)
+            if ((r = Math.round(Math.sqrt(1 - ny*ny) * radius)) <= 0)
                 continue;
 
             c.fillRect(cx - r, cy + y, r*2, 1);
@@ -174,8 +173,7 @@ export class Canvas {
         for (let y = -outerRadius; y <= outerRadius; ++ y) {
 
             ny1 = y/outerRadius;
-            r1 = Math.round(Math.sqrt(1 - ny1*ny1) * outerRadius);
-            if (r1 <= 0)
+            if ((r1 = Math.round(Math.sqrt(1 - ny1*ny1) * outerRadius)) <= 0)
                 continue;
 
             r2 = 0;
@@ -338,7 +336,7 @@ export class Canvas {
             chr -= 32;
 
             this.drawBitmap(font, x, y,
-                (chr % 16) * cw, ((chr/16) | 0) * ch, cw, ch);
+                (chr % 16)*cw, ((chr/16) | 0)*ch, cw, ch);
 
             x += cw + xoff;
         }
@@ -353,18 +351,19 @@ export class Canvas {
         const c = this.ctx;
 
         const offset = 1 + maxOffset * t;
-        let xoff : number;
-        let yoff : number;
+        // let xoff : number;
+        // let yoff : number;
 
         dy += bmp.height/2;
 
         for (let y = 0; y < bmp.height; ++ y) {
 
-            xoff = Math.sin((Math.PI*2*latitude)/bmp.height*y + t*(Math.PI*latitude))*amplitude*t;
-            yoff = (y - bmp.height/2) * offset;
+            // xoff = Math.sin((Math.PI*2*latitude)/bmp.height*y + t*(Math.PI*latitude))*amplitude*t;
+            // yoff = (y - bmp.height/2) * offset;
             
             c.drawImage(bmp, 0, y, bmp.width, 1,
-                (dx + xoff) | 0, (dy + yoff) | 0,
+                (dx + Math.sin((Math.PI*2*latitude)/bmp.height*y + t*(Math.PI*latitude))*amplitude*t) | 0, 
+                (dy + (y - bmp.height/2)*offset) | 0,
                 bmp.width, 1)
         }
     }
