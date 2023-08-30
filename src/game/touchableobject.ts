@@ -113,7 +113,6 @@ export class TouchableObject extends GameObject {
             return;
 
         const bmpBase = assets.getBitmap("b");
-        let bmpBody : Bitmap;
 
         const dx = Math.round(this.pos.x);
         const dy = Math.round(this.pos.y);
@@ -129,7 +128,6 @@ export class TouchableObject extends GameObject {
             return;
         }
 
-
         if (isGem) {
 
             canvas.drawBitmap(bmpBase, 
@@ -139,8 +137,19 @@ export class TouchableObject extends GameObject {
             return;
         }
 
-        bmpBody = assets.getBitmap("b" + String(this.type-1));
+        const bmpBody = assets.getBitmap("b" + String(this.type-1));
         canvas.drawBitmap(bmpBody, dx - 8, dy - 6);
+
+        // Eyes
+        canvas.drawBitmap(bmpBase, dx - 9, dy - 2, 32, 96, 16, 8);
+        canvas.fillColor("#000000");
+        for (let i = 0; i < 2; ++ i) {
+
+            canvas.fillRect(dx - 5 + i*4, dy, 1, 1);
+        }
+
+        // Nose
+        canvas.drawBitmap(bmpBase, dx - 6, dy - 1, 32, 104, 8, 8);
     }
 
 

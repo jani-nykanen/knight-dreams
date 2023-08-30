@@ -49,8 +49,8 @@ const COLOR_MAP = [
     "1J50", "1J50", "1J50", "1J50", "0400", "0400", "0400", "0400",
     "1540", "1540", "1540", "1E70", "1E70", "1E70", "3000", "3000",
     "1540", "1540", "1540", "0K20", "1QP0", "14C0", "1QP0", "1OP0",
-    "1DC0", "1DC0", undefined, undefined, undefined, undefined, "1OP0", "1OP0",
-    "1DC0", "1DC0", undefined, undefined, undefined, undefined, undefined, undefined,
+    "1DC0", "1DC0", undefined, undefined, "1020", "1020", "1OP0", "1OP0",
+    "1DC0", "1DC0", undefined, undefined, "19A0", undefined, undefined, undefined,
     "1DC0", "12C0", undefined, undefined, undefined, undefined, undefined, undefined,
 ];
 

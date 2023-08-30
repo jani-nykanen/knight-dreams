@@ -75,7 +75,7 @@ export class Terrain {
         
         const TYPE_PROB = [0.75, 0.25];
 
-        const GEM_PROB = 0.25;
+        const OBJECT_PROB = 0.5;
 
         if ((-- this.specialWait) > 0)
             return;
@@ -115,13 +115,19 @@ export class Terrain {
 
         let x : number;
         let y : number;
+        let count : number;
 
-        if (Math.random() < GEM_PROB) {
+        if (Math.random() < OBJECT_PROB) {
 
-            x = opos + 8 - width*16/2 + ((Math.random()*(width)) | 0)*16;
+            count = Math.min(3, sampleUniform(1, width));
+
+            x = opos + 8 - width*16/2 + ((Math.random()*(width - count + 1)) | 0)*16;
             y = event.screenHeight - height*16 + (this.touchableType == TouchableType.Gem ? GEM_OFF_Y : -8);
             
-            next<TouchableObject>(TouchableObject, this.touchables).spawn(x, y, this.touchableType);
+            for (let i = 0; i < count; ++ i) {
+
+                next<TouchableObject>(TouchableObject, this.touchables).spawn(x + i*16, y, this.touchableType);
+            }
         }
     }
 
@@ -138,21 +144,25 @@ export class Terrain {
     }
 
 
+    private layerCheck() : boolean {
+
+        return (!this.layers[this.touchableLayer].isFlatSurfaceOrBridge() &&
+            !this.layers[this.touchableLayer = 1 - this.touchableLayer].isFlatSurfaceOrBridge());
+    }
+
+
     private spawnTouchables(event : ProgramEvent) : void {
 
         const REPEAT_WEIGHT = [0.50, 0.30, 0.20];
 
-        if ((-- this.touchableRepeat) > 0) {
+        if (this.touchableRepeat > 0) {
 
-            if (!this.layers[this.touchableLayer].isFlatSurfaceOrBridge() &&
-                !this.layers[this.touchableLayer = 1 - this.touchableLayer].isFlatSurfaceOrBridge()) {
+            if (this.layerCheck()) {
 
-                this.touchableRepeat = 0;
+                return;
             }
-            else {
-
-                this.spawnTouchableObject(event);
-            }
+            -- this.touchableRepeat;
+            this.spawnTouchableObject(event);
             return;
         }
 
@@ -160,8 +170,7 @@ export class Terrain {
             return;
 
         this.touchableLayer = 1 - this.touchableLayer;
-        if (!this.layers[this.touchableLayer].isFlatSurfaceOrBridge() &&
-            !this.layers[this.touchableLayer = 1 - this.touchableLayer].isFlatSurfaceOrBridge()) {
+        if (this.layerCheck()) {
             
             return;
         }
@@ -170,7 +179,7 @@ export class Terrain {
             sampleUniform(TouchableType.StaticBall, TouchableType.StoneBall) : 
             TouchableType.Gem;
 
-        this.touchableRepeat = 1 + weightedProbability(REPEAT_WEIGHT);
+        this.touchableRepeat = weightedProbability(REPEAT_WEIGHT); // + 1?
         this.touchableTimer = this.touchableRepeat + sampleUniform(TOUCHABLE_TIMER_MIN, TOUCHABLE_TIMER_MAX);
 
         this.spawnTouchableObject(event);
