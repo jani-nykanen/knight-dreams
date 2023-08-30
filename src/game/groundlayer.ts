@@ -117,8 +117,7 @@ export class GroundLayer {
 
     private updateSlope() : void {
 
-        const SLOPE_DURATION_MIN = 1;
-        const SLOPE_DURATION_MAX = 2;
+        const SLOPE_DURATION_WEIGHTS = [0.67, 0.33];
 
         this.lastSlope = this.activeSlope;
 
@@ -154,7 +153,7 @@ export class GroundLayer {
             this.typeWait >= 2 &&
             (-- this.slopeWait) <= 0) {
 
-            this.slopeDuration = Math.min(this.typeWait - 1, sampleUniform(SLOPE_DURATION_MIN, SLOPE_DURATION_MAX));
+            this.slopeDuration = Math.min(this.typeWait - 1, 1 + weightedProbability(SLOPE_DURATION_WEIGHTS));
             this.slopeWait = (this.slopeDuration - 1) + sampleUniform(SLOPE_WAIT_MIN, SLOPE_WAIT_MAX);
 
             this.activeSlope = Math.random() < 0.5 ? SlopeDirection.Up : SlopeDirection.Down;
@@ -280,6 +279,8 @@ export class GroundLayer {
 
     private updateSpikes() : boolean {
 
+        const SPIKE_COUNT_WEIGHTS = [0.67, 0.33];
+
         if (this.activeType != TileType.Surface ||
             this.activeSlope != SlopeDirection.None) {
 
@@ -295,7 +296,7 @@ export class GroundLayer {
         if ((-- this.spikeWait) <= 0) {
 
             this.spikeWait = sampleUniform(SPIKE_WAIT_MIN, SPIKE_WAIT_MAX);
-            this.spikeCount = sampleUniform(1, 2);
+            this.spikeCount = 1 + weightedProbability(SPIKE_COUNT_WEIGHTS);
 
             return true;
         }
@@ -477,10 +478,13 @@ export class GroundLayer {
                 break;
             }
 
+            // Palmtree collisions mess up everything
+            /*
             if (this.decorations[i] == Decoration.Palmtree) {
 
                 o.floorCollision(dx - 4, dy - 30, dx + 20, dy - 30, globalSpeed, event);
             }
+            */
 
             if (this.spikes[i]) {
 

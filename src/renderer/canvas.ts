@@ -235,10 +235,11 @@ export class Canvas {
     }
 
 
-    public drawBitmap(bmp : Bitmap, 
-        dx : number = 0, dy : number = 0, 
+    public drawScaledBitmap(bmp : Bitmap, 
+        dx : number, dy : number,
+        dw : number, dh : number, 
         sx : number = 0, sy : number = 0, 
-        sw = bmp.width, sh = bmp.height,
+        sw : number = bmp.width, sh : number = bmp.height,
         flip = Flip.None) : void {
 
         const c = this.ctx;
@@ -253,6 +254,8 @@ export class Canvas {
         sh |= 0;
         dx |= 0;
         dy |= 0;
+        dw |= 0;
+        dh |= 0;
 
         if (saveState) {
 
@@ -261,23 +264,33 @@ export class Canvas {
 
         if ((flip & Flip.Horizontal) != 0) {
 
-            c.translate(sw, 0);
+            c.translate(dw, 0);
             c.scale(-1, 1);
             dx *= -1;
         }
         if ((flip & Flip.Vertical) != 0) {
 
-            c.translate(0, sh);
+            c.translate(0, dh);
             c.scale(1, -1);
             dy *= -1;
         }
 
-        c.drawImage(bmp, sx, sy, sw, sh, dx, dy, sw, sh);
+        c.drawImage(bmp, sx, sy, sw, sh, dx, dy, dw, dh);
 
         if (saveState) {
 
             c.restore();
         }
+    }
+
+
+    public drawBitmap(bmp : Bitmap, 
+        dx : number = 0, dy : number = 0, 
+        sx : number = 0, sy : number = 0, 
+        sw = bmp.width, sh = bmp.height,
+        flip = Flip.None) : void {
+
+        this.drawScaledBitmap(bmp, dx, dy, sw, sh, sx, sy, sw, sh, flip);
     }
 
 

@@ -27,8 +27,8 @@ const PALETTE = [
     "005500ff", // J Dark green
     "aaffffff", // K Bright blue
     "ff0000ff", // L Bright red
-    "005555ff", // M Dark turqoise (is that a word)
-    "55aaaaff", // N Brighter version of the previous color
+    "aaffaaff", // M Bright green
+    "55aa55ff", // N Weird green
     "550055ff", // O Darkish reddish purple
     "aa55aaff", // P Brighter reddish purple
     "ffaaffff", // Q Pink
@@ -447,11 +447,11 @@ const generate = (event : ProgramEvent) : void => {
 
     const BALL_NAMES = [ "b1", "b2", "b3", "b4", "b5" ];
     const BALL_COLORS = [ 
-        ["1KN0", "1MN0", "1MN0", "1MN0"],
-        ["12G0", "1FG0", "1FG0", "1FG0"],
-        ["1KI0", "1HI0", "1HI0", "1HI0"],
-        ["18A0", "19A0", "19A0", "19A0"],
-        ["12C0", "1DC0", "1DC0", "1DC0"],
+        ["12M0", "1NM0", "1NM0", "1NM0"],
+        ["0000", "0000", "0000", "0000"],
+        ["0000", "0000", "0000", "0000"],
+        ["0000", "0000", "0000", "0000"],
+        ["0000", "0000", "0000", "0000"],
     ];
 
     const bmpBase = event.assets.getBitmap("_b");

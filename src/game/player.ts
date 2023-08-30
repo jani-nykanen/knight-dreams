@@ -469,6 +469,7 @@ export class Player extends GameObject {
         const STOMP_SPEED = -3.0;
         
         this.speed.y = STOMP_SPEED;
+        this.canFly = true;
     }
 
 

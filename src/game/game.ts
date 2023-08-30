@@ -47,7 +47,7 @@ export class Game implements Scene {
     private cloudPos : number = 0;
 
     private globalSpeed : number = 0.0;
-    private targetSpeed : number = 2.0;
+    private targetSpeed : number = 1.0; // 2.0;
 
     private paused : boolean = false;
     private gameOverPhase : number = 0;

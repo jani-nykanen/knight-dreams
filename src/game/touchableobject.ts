@@ -72,6 +72,7 @@ export class TouchableObject extends GameObject {
 
         switch (this.type) {
 
+        case TouchableType.StaticBall:
         case TouchableType.Gem:
 
             this.specialTimer = (this.specialTimer + FLOAT_SPEED*event.tick) % (Math.PI*2);
@@ -94,6 +95,11 @@ export class TouchableObject extends GameObject {
         this.speed.zero();
         this.target.zero();
 
+        // TEMP
+        if (type != TouchableType.Gem) {
+
+            type = TouchableType.StaticBall;
+        }
         this.type = type;
 
         this.exist = true;
@@ -101,6 +107,8 @@ export class TouchableObject extends GameObject {
 
         const w = type == TouchableType.Gem ? 12 : 8;
         this.hitbox = new Vector(w, w);
+
+        this.specialTimer = (((x / 16) | 0) % 2)*Math.PI;
     }
 
 
@@ -114,8 +122,8 @@ export class TouchableObject extends GameObject {
 
         const bmpBase = assets.getBitmap("b");
 
-        const dx = Math.round(this.pos.x);
-        const dy = Math.round(this.pos.y);
+        let dx = Math.round(this.pos.x);
+        let dy = Math.round(this.pos.y);
         const isGem = this.type == TouchableType.Gem;
 
         let t : number;
@@ -138,18 +146,22 @@ export class TouchableObject extends GameObject {
         }
 
         const bmpBody = assets.getBitmap("b" + String(this.type-1));
-        canvas.drawBitmap(bmpBody, dx - 8, dy - 6);
 
-        // Eyes
-        canvas.drawBitmap(bmpBase, dx - 9, dy - 2, 32, 96, 16, 8);
-        canvas.fillColor("#000000");
-        for (let i = 0; i < 2; ++ i) {
+        let dw = 16;
+        let dh = 16;
+        if (this.type == TouchableType.StaticBall) {
 
-            canvas.fillRect(dx - 5 + i*4, dy, 1, 1);
+            dw = 16 + Math.max(0, Math.sin(this.specialTimer)*8);
+            dh = 16 - Math.min(0, Math.sin(this.specialTimer)*4);
+
+            // dx -= (dw - 16)/2;
+            dy -= (dh - 16);
         }
 
-        // Nose
-        canvas.drawBitmap(bmpBase, dx - 6, dy - 1, 32, 104, 8, 8);
+        canvas.drawScaledBitmap(bmpBody, dx - (dw - 16)/2 - 8, dy - 6, dw, dh);
+
+        // Face
+        canvas.drawBitmap(bmpBase, dx - 5, dy - 2, 32, 96, 8, 8);
     }
 
 
