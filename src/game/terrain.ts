@@ -176,7 +176,7 @@ export class Terrain {
         }
 
         this.touchableType = this.touchableType == TouchableType.Gem ? 
-            sampleUniform(TouchableType.StaticBall, TouchableType.StoneBall) : 
+            sampleUniform(TouchableType.StaticBall, TouchableType.EnemyLast) : 
             TouchableType.Gem;
 
         this.touchableRepeat = weightedProbability(REPEAT_WEIGHT); // + 1?
@@ -194,9 +194,11 @@ export class Terrain {
         }
 
         for (let o of this.touchables) {
-
+            
             o.update(globalSpeed, event);
             o.playerCollision(globalSpeed, player, event);
+
+            this.objectCollision(o, globalSpeed, event);
         }
 
         if ((this.tileOffset += globalSpeed*event.tick) >= 16) {

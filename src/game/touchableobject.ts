@@ -18,10 +18,13 @@ export const enum TouchableType {
 
     // The rest are enemies
     StaticBall = 2,
-    FlyingBall = 3,
-    JumpingBall = 4,
+    JumpingBall = 3,
+    FlyingBall = 4,
     DrivingBall = 5,
-    StoneBall = 6
+    StoneBall = 6,
+
+    // TODO: Change
+    EnemyLast = 3
 }
 
 
@@ -69,13 +72,32 @@ export class TouchableObject extends GameObject {
     protected updateEvent(globalSpeed : number, event : ProgramEvent): void {
         
         const FLOAT_SPEED = Math.PI*2/60.0;
+        const BOUNCING_SPEED = 4.0/40.0;
+        const JUMP_WAIT_SPEED = 3.0/30.0;
+        const JUMP_SPEED = -3.5;
 
         switch (this.type) {
 
-        case TouchableType.StaticBall:
         case TouchableType.Gem:
 
             this.specialTimer = (this.specialTimer + FLOAT_SPEED*event.tick) % (Math.PI*2);
+            break;
+
+         case TouchableType.StaticBall:
+
+            this.specialTimer = (this.specialTimer + BOUNCING_SPEED*event.tick) % 4;
+            break;
+
+        case TouchableType.JumpingBall:
+
+            if (this.touchSurface) {
+
+                if ((this.specialTimer += JUMP_WAIT_SPEED*event.tick) >= 3.0) {
+
+                    this.specialTimer = 0.0;
+                    this.speed.y = JUMP_SPEED;
+                }
+            }
             break;
 
         default:
@@ -91,22 +113,28 @@ export class TouchableObject extends GameObject {
 
     public spawn(x : number, y : number, type : TouchableType) : void {
 
+        const BASE_GRAVITY = 4.0;
+
         this.pos = new Vector(x, y);
         this.speed.zero();
         this.target.zero();
+        this.center.zero();
 
-        // TEMP
-        if (type != TouchableType.Gem) {
-
-            type = TouchableType.StaticBall;
-        }
         this.type = type;
 
         this.exist = true;
         this.dying = false;
 
-        const w = type == TouchableType.Gem ? 12 : 8;
-        this.hitbox = new Vector(w, w);
+        const isGem = type == TouchableType.Gem;
+
+        const w = isGem ? 12 : 8;
+        this.hitbox = new Vector(w, 12);
+
+        if (!isGem) {
+
+            this.target.y = BASE_GRAVITY;
+            this.center.y = 2;
+        }
 
         this.specialTimer = (((x / 16) | 0) % 2)*Math.PI;
     }
@@ -116,6 +144,11 @@ export class TouchableObject extends GameObject {
         
         const DEATH_WEIGHT = 0.75;
         const DEATH_RING_RADIUS = 16;
+        const FACE_EPS = 1.0;
+
+        const BODY_FRAME = [0, 1, 0, 2];
+        const FACE_SX = [0, 8, 0, 0, 0];
+        const FACE_SHIFT_Y = [0, 1, -1];
 
         if (!this.exist || this.type == TouchableType.None)
             return;
@@ -147,21 +180,21 @@ export class TouchableObject extends GameObject {
 
         const bmpBody = assets.getBitmap("b" + String(this.type-1));
 
-        let dw = 16;
-        let dh = 16;
-        if (this.type == TouchableType.StaticBall) {
+        let faceShiftY = 0;
+        let frame = 0;
 
-            dw = 16 + Math.max(0, Math.sin(this.specialTimer)*8);
-            dh = 16 - Math.min(0, Math.sin(this.specialTimer)*4);
+        if (this.type == TouchableType.StaticBall ||
+            this.type == TouchableType.JumpingBall) {
 
-            // dx -= (dw - 16)/2;
-            dy -= (dh - 16);
+            frame = BODY_FRAME[(this.specialTimer | 0)];
+            faceShiftY = Math.abs(this.speed.y) > FACE_EPS ? Math.sign(this.speed.y)*2 : 0;
         }
 
-        canvas.drawScaledBitmap(bmpBody, dx - (dw - 16)/2 - 8, dy - 6, dw, dh);
+        canvas.drawBitmap(bmpBody, dx - 8, dy - 7, frame*16, 0, 16, 16);
 
         // Face
-        canvas.drawBitmap(bmpBase, dx - 5, dy - 2, 32, 96, 8, 8);
+        canvas.drawBitmap(bmpBase, dx - 5, dy - 3 + faceShiftY + FACE_SHIFT_Y[frame], 
+            16 + FACE_SX[this.type - 2], 112, 8, 8);
     }
 
 

@@ -19,7 +19,6 @@ export class Player extends GameObject {
 
     private jumpTimer : number = 0;
     private ledgeTimer : number = 0;
-    private touchSurface : boolean = true;
 
     private propelling : boolean = false;
     private propellerTimer : number = 0;

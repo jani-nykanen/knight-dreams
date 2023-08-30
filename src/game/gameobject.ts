@@ -28,6 +28,7 @@ export class GameObject extends ExistingObject {
     protected center : Vector;
 
     protected dying : boolean = false;
+    protected touchSurface : boolean = false;
 
 
     constructor(x = 0, y = 0) {
@@ -83,6 +84,8 @@ export class GameObject extends ExistingObject {
 
         this.updateEvent?.(globalSpeed, event);
         this.move(event);
+
+        this.touchSurface = false;
     }
 
 
@@ -142,6 +145,8 @@ export class GameObject extends ExistingObject {
 
             this.pos.y = y0 - this.center.y - this.hitbox.y/2;
             this.speed.y = 0;
+
+            this.touchSurface = true;
 
             this.floorCollisionEvent(event);
 
