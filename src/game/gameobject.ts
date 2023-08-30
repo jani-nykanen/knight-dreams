@@ -30,6 +30,8 @@ export class GameObject extends ExistingObject {
     protected dying : boolean = false;
     protected touchSurface : boolean = false;
 
+    protected getCollision : boolean = true;
+
 
     constructor(x = 0, y = 0) {
 
@@ -125,7 +127,8 @@ export class GameObject extends ExistingObject {
         // if (x1 >= x2)
         //    return false;
 
-        if (!this.exist || this.dying ||
+        if (!this.getCollision ||
+            !this.exist || this.dying ||
             this.speed.y <= speedCheckLimit ||
             this.pos.x + this.center.x + this.hitbox.x/2*leftMargin < x1 ||
             this.pos.x + this.center.x - this.hitbox.x/2*rightMargin > x2)

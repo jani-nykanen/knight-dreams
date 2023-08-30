@@ -7,6 +7,7 @@ import { Bitmap } from "../renderer/bitmap.js";
 import { Canvas, Flip } from "../renderer/canvas.js";
 import { Sprite } from "../renderer/sprite.js";
 import { GameObject } from "./gameobject.js";
+import { drawPropeller } from "./propeller.js";
 
 
 export const DEATH_TIME = 60;
@@ -369,17 +370,9 @@ export class Player extends GameObject {
         canvas.drawBitmap(bmp, dx, dy + 8, sx, sy, 16, 8);
         
         // Feather
-        let sw : number;
-        let propellerFrame : number;
         if (this.propelling) {
 
-            propellerFrame = this.propeller.getFrame();
-            sw = PROPELLER_SW[propellerFrame];
-
-            canvas.drawBitmap(bmp, 
-                dx + (16 - sw)/2, dy - 6, 
-                PROPELLER_SX[propellerFrame], 48, sw, 8, 
-                PROPELLER_FLIP[propellerFrame]);
+            drawPropeller(canvas, bmp, this.propeller.getFrame(), dx, dy);
         }
         else {
 

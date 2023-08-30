@@ -16,6 +16,9 @@ const SPECIAL_WAIT_MAX = 16;
 const TOUCHABLE_TIMER_MIN = 2;
 const TOUCHABLE_TIMER_MAX = 12;
 
+const FLYING_ENEMY_TIMER_MIN = 8;
+const FLYING_ENEMY_TIMER_MAX = 16;
+
 const GEM_OFF_Y = -10;
 
 
@@ -35,6 +38,8 @@ export class Terrain {
     private touchableRepeat : number = 0;
     private touchableLayer : number = 0;
     private touchableType : TouchableType = TouchableType.None;
+
+    private flyingEnemyTimer : number = 0;
 
     private readonly width : number;
 
@@ -56,6 +61,7 @@ export class Terrain {
         this.specialPlatforms = new Array<SpecialPlatform> ();
 
         this.touchableTimer = sampleUniform(TOUCHABLE_TIMER_MIN, TOUCHABLE_TIMER_MAX);
+        this.flyingEnemyTimer = sampleUniform(FLYING_ENEMY_TIMER_MIN, FLYING_ENEMY_TIMER_MAX);
         this.touchables = new Array<TouchableObject> ();
     }
 
@@ -176,13 +182,36 @@ export class Terrain {
         }
 
         this.touchableType = this.touchableType == TouchableType.Gem ? 
-            sampleUniform(TouchableType.StaticBall, TouchableType.EnemyLast) : 
+            sampleUniform(TouchableType.StaticBall, TouchableType.LastGroundEnemy) : 
             TouchableType.Gem;
 
         this.touchableRepeat = weightedProbability(REPEAT_WEIGHT); // + 1?
         this.touchableTimer = this.touchableRepeat + sampleUniform(TOUCHABLE_TIMER_MIN, TOUCHABLE_TIMER_MAX);
 
         this.spawnTouchableObject(event);
+    }
+
+
+    private spawnFlyingEnemies(event : ProgramEvent) : void {
+
+        const REPEAT_WEIGHT = [0.50, 0.30, 0.20];
+        const OFFSET_Y = 32;    
+
+        if ((-- this.flyingEnemyTimer) > 0)
+            return;
+
+        const layer = Math.random() < 0.5 ? 0 : 1;
+        const y = event.screenHeight - this.layers[layer].getHeight()*16 - OFFSET_Y;
+        const repeat = weightedProbability(REPEAT_WEIGHT);
+
+        this.flyingEnemyTimer = sampleUniform(FLYING_ENEMY_TIMER_MIN, FLYING_ENEMY_TIMER_MAX);
+
+        for (let i = 0; i < repeat; ++ i) {
+
+            next<TouchableObject>(TouchableObject, this.touchables)
+            .spawn(this.getObjectPos() + 8 - 16*(1 - layer) - 8*layer + i*16, y, 
+                TouchableType.FlyingBall);
+        }
     }
 
 
@@ -212,6 +241,7 @@ export class Terrain {
             }
             this.spawnSpecialPlatform(event);
             this.spawnTouchables(event);
+            this.spawnFlyingEnemies(event);
 
             this.tilePointer = (this.tilePointer + 1) % this.width;
         }

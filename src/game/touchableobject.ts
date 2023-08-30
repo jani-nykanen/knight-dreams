@@ -1,30 +1,26 @@
-import { clamp } from "../common/math.js";
 import { Vector } from "../common/vector.js";
 import { AssetManager } from "../core/assets.js";
 import { ProgramEvent } from "../core/event.js";
-import { InputState } from "../core/input.js";
-import { Bitmap } from "../renderer/bitmap.js";
-import { Canvas, Flip } from "../renderer/canvas.js";
+import { Canvas } from "../renderer/canvas.js";
 import { Sprite } from "../renderer/sprite.js";
 import { GameObject } from "./gameobject.js";
 import { Player } from "./player.js";
+import { drawPropeller } from "./propeller.js";
 
 
 export const enum TouchableType {
 
     None = 0,
-
     Gem = 1,
 
     // The rest are enemies
     StaticBall = 2,
     JumpingBall = 3,
-    FlyingBall = 4,
-    DrivingBall = 5,
-    StoneBall = 6,
+    DrivingBall = 4,
+    StoneBall = 5,
+    FlyingBall = 6,
 
-    // TODO: Change
-    EnemyLast = 3
+    LastGroundEnemy = 5
 }
 
 
@@ -37,6 +33,8 @@ export class TouchableObject extends GameObject {
 
     private specialTimer : number = 0;
     private deathTimer : number = 0;
+
+    private didTouchGround : boolean = false;
 
 
     constructor() {
@@ -75,6 +73,14 @@ export class TouchableObject extends GameObject {
         const BOUNCING_SPEED = 4.0/40.0;
         const JUMP_WAIT_SPEED = 3.0/30.0;
         const JUMP_SPEED = -3.5;
+        const DRIVE_SPEED = 0.5;
+        const TIRE_ANIM_SPEED = 2.0/15.0;
+        const LEDGE_JUMP = -2.0;
+        const STONE_BALL_JUMP = -2.5;
+        const STONE_BALL_SPEED = 1.0;
+        const FLY_BALL_FLOAT_SPEED = Math.PI*2/120;
+        const FLY_SPEED_Y_FACTOR = 0.5;
+        const FLY_SPEED_X = -0.25;
 
         switch (this.type) {
 
@@ -100,6 +106,41 @@ export class TouchableObject extends GameObject {
             }
             break;
 
+        case TouchableType.DrivingBall:
+
+            this.specialTimer = (this.specialTimer + TIRE_ANIM_SPEED*event.tick) % 2;
+            
+            this.target.x = (this.speed.x = -DRIVE_SPEED);
+
+            if (this.didTouchGround && !this.touchSurface) {
+
+                this.speed.y = LEDGE_JUMP;
+            }
+            break;
+
+        case TouchableType.StoneBall:
+
+            if (this.touchSurface) {
+
+                this.speed.y = STONE_BALL_JUMP;
+            }
+            this.speed.x = -STONE_BALL_SPEED;
+
+            break;
+
+        case TouchableType.FlyingBall:
+
+            if (this.pos.x >= event.screenWidth + 8) {
+
+                this.target.y = 0;
+                break;
+            }
+
+            this.specialTimer = (this.specialTimer + FLY_BALL_FLOAT_SPEED*event.tick) % (Math.PI*2);
+            this.target.y = Math.sin(this.specialTimer)*FLY_SPEED_Y_FACTOR;
+            this.target.x = (this.speed.x = FLY_SPEED_X);
+            break;
+
         default:
             break;
         }
@@ -108,12 +149,14 @@ export class TouchableObject extends GameObject {
 
             this.exist = false;
         }
+
+        this.didTouchGround = this.touchSurface;
     }
 
 
     public spawn(x : number, y : number, type : TouchableType) : void {
 
-        const BASE_GRAVITY = 4.0;
+        const BASE_GRAVITY = 3.0;
 
         this.pos = new Vector(x, y);
         this.speed.zero();
@@ -137,6 +180,12 @@ export class TouchableObject extends GameObject {
         }
 
         this.specialTimer = (((x / 16) | 0) % 2)*Math.PI;
+
+        this.touchSurface = true;
+        this.didTouchGround = false;
+
+        this.getCollision = type != TouchableType.FlyingBall;
+        this.friction.y = this.getCollision ? 0.15 : 0.05;
     }
 
 
@@ -147,7 +196,8 @@ export class TouchableObject extends GameObject {
         const FACE_EPS = 1.0;
 
         const BODY_FRAME = [0, 1, 0, 2];
-        const FACE_SX = [0, 8, 0, 0, 0];
+        const FACE_SX = [0, 8, 0, 24, 16];
+        const FACE_SH = [8, 8, 4, 8, 8];
         const FACE_SHIFT_Y = [0, 1, -1];
 
         if (!this.exist || this.type == TouchableType.None)
@@ -180,8 +230,10 @@ export class TouchableObject extends GameObject {
 
         const bmpBody = assets.getBitmap("b" + String(this.type-1));
 
+        let faceShiftX = 0;
         let faceShiftY = 0;
         let frame = 0;
+        let bsh = 16;
 
         if (this.type == TouchableType.StaticBall ||
             this.type == TouchableType.JumpingBall) {
@@ -189,12 +241,32 @@ export class TouchableObject extends GameObject {
             frame = BODY_FRAME[(this.specialTimer | 0)];
             faceShiftY = Math.abs(this.speed.y) > FACE_EPS ? Math.sign(this.speed.y)*2 : 0;
         }
+        else if (this.type == TouchableType.DrivingBall) {
 
-        canvas.drawBitmap(bmpBody, dx - 8, dy - 7, frame*16, 0, 16, 16);
+            -- dy;
+            bsh = 14;
+            faceShiftY = 2;
+            faceShiftX = -1;
+        }
+
+        // Body
+        canvas.drawBitmap(bmpBody, dx - 8, dy - 7, frame*16, 0, 16, bsh);
 
         // Face
-        canvas.drawBitmap(bmpBase, dx - 5, dy - 3 + faceShiftY + FACE_SHIFT_Y[frame], 
-            16 + FACE_SX[this.type - 2], 112, 8, 8);
+        canvas.drawBitmap(bmpBase, dx - 5 + faceShiftX, dy - 3 + faceShiftY + FACE_SHIFT_Y[frame], 
+            16 + FACE_SX[this.type - 2], 112, 8, FACE_SH[this.type - 2]);
+
+        if (this.type == TouchableType.DrivingBall) {
+
+            frame = (this.specialTimer | 0);
+            canvas.drawBitmap(bmpBase, dx - 8, dy + 1, 48, 104 + frame*8, 16, 8);
+        }
+        else if (this.type == TouchableType.FlyingBall) {
+
+            drawPropeller(canvas, bmpBase, 
+                (((this.specialTimer/(Math.PI*2))*32) | 0) % 4,
+                dx - 8, dy - 5);
+        }
     }
 
 
