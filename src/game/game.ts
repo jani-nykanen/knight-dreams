@@ -9,10 +9,10 @@ import { Camera } from "./camera.js";
 import { updateSpeedAxis } from "./gameobject.js";
 
 
-const scoreToString = (score : number, maxLength = 6) : string => {
+const scoreToString = (score : number) : string => {
 
     const s = String(score);
-    return "0".repeat(Math.max(0, maxLength - s.length)) + s; 
+    return "0".repeat(Math.max(0, 7 - s.length)) + s; 
 }
 
 
@@ -391,6 +391,9 @@ export class Game implements Scene {
         }
 
         this.drawTransition(canvas);
+
+        //canvas.moveTo();
+        //canvas.drawBitmap(assets.getBitmap("t"));
     }
 
 }

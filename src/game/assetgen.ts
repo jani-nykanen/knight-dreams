@@ -46,7 +46,7 @@ const COLOR_MAP = [
     "1B80", "1B80", "1B80", "1B80", "1FG0", "1FG0", "1FG0", "1FG0",
     "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", "1780", 
     "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", "1780", 
-    "1J50", "1J50", "1J50", "1J50", "0400", "0400", "0400", "0400",
+    "1J50", "1J50", "1J50", "1J50", undefined, undefined, undefined, undefined,
     "1540", "1540", "1540", "1E70", "1E70", "1E70", "3000", "3000",
     "1540", "1540", "1540", "0K20", "1QP0", "14C0", "1QP0", "1OP0",
     "1DC0", "1DC0", "1DC0", "1DC0", "1DC0", "1DC0", "1OP0", "1OP0",
@@ -186,14 +186,6 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
     //
     // Palm tree
     //
-
-    // Leaves
-    for (let i = 0; i < 2; ++ i) {
-
-        c.drawImage(base, i*32, 72, 32, 8, 152, 1, 32, 8);
-        // Missing pixels
-        c.fillRect(152 + 8 + i*11, 0, 5, 1);
-    }
     
     // Trunk
     for (let i = 0; i < 2; ++ i) {
@@ -202,6 +194,13 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
     }
     put(7, 8, 20, 3, 4, 1);
 
+    // Leaves
+    c.drawImage(base, 0, 72, 32, 8, 152, 5, 32, 8);
+     // Missing pixels
+    for (let i = 0; i < 2; ++ i) {
+       
+        c.fillRect(152 + 8 + i*11, 4, 5, 1);
+    }
 
     //
     // Mushrooms
@@ -403,6 +402,16 @@ const generateAudio = (event : ProgramEvent) : void => {
         )
     );
 
+    event.assets.addSample("ab",
+        event.audio.createSample(
+            [112,  6, 
+             192, 5, 
+             320, 4], 
+            0.70,
+            "sawtooth", Ramp.Exponential
+        )
+    );
+
     // Old samples from another project, some of them might
     // work here
 /*
@@ -451,7 +460,7 @@ const generate = (event : ProgramEvent) : void => {
         ["12K0", "1IK0"],
         ["12Q0", "16Q0"],
         ["12C0", "1DC0"],
-        ["12G0", "1FG0"],
+        ["13A0", "19A0"],
     ];
 
     const bmpBase = event.assets.getBitmap("_b");

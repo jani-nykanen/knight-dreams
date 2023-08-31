@@ -33,6 +33,8 @@ export class TouchableObject extends GameObject {
 
     private specialTimer : number = 0;
     private deathTimer : number = 0;
+    private yoff : number = 0;
+    private initialY : number = 0;
 
     private didTouchGround : boolean = false;
 
@@ -42,7 +44,7 @@ export class TouchableObject extends GameObject {
         super();
         this.exist = false;
 
-        this.friction = new Vector(0.15, 0.15);
+        this.friction = new Vector(0.15, 0.125);
     }
 
 
@@ -53,7 +55,7 @@ export class TouchableObject extends GameObject {
         this.dying = true;
         this.deathTimer = 0.0;
 
-        player.addScore(100);
+        player.addScore(1000);
     }
 
 
@@ -72,15 +74,16 @@ export class TouchableObject extends GameObject {
         const FLOAT_SPEED = Math.PI*2/60.0;
         const BOUNCING_SPEED = 4.0/40.0;
         const JUMP_WAIT_SPEED = 3.0/30.0;
-        const JUMP_SPEED = -3.5;
+        const JUMP_SPEED = -3.25;
         const DRIVE_SPEED = 0.5;
         const TIRE_ANIM_SPEED = 2.0/15.0;
-        const LEDGE_JUMP = -2.0;
-        const STONE_BALL_JUMP = -2.5;
-        const STONE_BALL_SPEED = 1.0;
-        const FLY_BALL_FLOAT_SPEED = Math.PI*2/120;
-        const FLY_SPEED_Y_FACTOR = 0.5;
+        const LEDGE_JUMP = -2.5;
+        const STONE_BALL_SPEED = 0.5;
+        const FLY_BALL_FLOAT_SPEED = Math.PI*2/150;
         const FLY_SPEED_X = -0.25;
+
+        let jumpWaitFactor = 1;
+        let jumpFactor = 1;
 
         switch (this.type) {
 
@@ -94,14 +97,28 @@ export class TouchableObject extends GameObject {
             this.specialTimer = (this.specialTimer + BOUNCING_SPEED*event.tick) % 4;
             break;
 
+        case TouchableType.StoneBall:
+
+            this.speed.x = 0;
+            if (!this.touchSurface) {
+
+                this.speed.x = -STONE_BALL_SPEED;
+            }
+            this.target.x = this.speed.x;
+
+            jumpWaitFactor = 2;
+            jumpFactor = 0.75;
+            
         case TouchableType.JumpingBall:
 
             if (this.touchSurface) {
 
-                if ((this.specialTimer += JUMP_WAIT_SPEED*event.tick) >= 3.0) {
+                if ((this.specialTimer += jumpWaitFactor*JUMP_WAIT_SPEED*event.tick) >= 3.0) {
 
                     this.specialTimer = 0.0;
-                    this.speed.y = JUMP_SPEED;
+                    this.speed.y = JUMP_SPEED*jumpFactor;
+
+                    event.audio.playSample(event.assets.getSample("ab"), 0.50);
                 }
             }
             break;
@@ -118,27 +135,14 @@ export class TouchableObject extends GameObject {
             }
             break;
 
-        case TouchableType.StoneBall:
-
-            if (this.touchSurface) {
-
-                this.speed.y = STONE_BALL_JUMP;
-            }
-            this.speed.x = -STONE_BALL_SPEED;
-
-            break;
-
         case TouchableType.FlyingBall:
 
-            if (this.pos.x >= event.screenWidth + 8) {
-
-                this.target.y = 0;
-                break;
-            }
-
             this.specialTimer = (this.specialTimer + FLY_BALL_FLOAT_SPEED*event.tick) % (Math.PI*2);
-            this.target.y = Math.sin(this.specialTimer)*FLY_SPEED_Y_FACTOR;
+
             this.target.x = (this.speed.x = FLY_SPEED_X);
+            this.yoff = Math.sin(this.specialTimer) * 12;
+            this.pos.y = this.initialY + this.yoff;
+
             break;
 
         default:
@@ -156,12 +160,14 @@ export class TouchableObject extends GameObject {
 
     public spawn(x : number, y : number, type : TouchableType) : void {
 
-        const BASE_GRAVITY = 3.0;
+        const BASE_GRAVITY = 2.5;
 
         this.pos = new Vector(x, y);
         this.speed.zero();
         this.target.zero();
         this.center.zero();
+        
+        this.initialY = y;
 
         this.type = type;
 
@@ -169,23 +175,25 @@ export class TouchableObject extends GameObject {
         this.dying = false;
 
         const isGem = type == TouchableType.Gem;
+        const isFlying = type == TouchableType.FlyingBall;
 
         const w = isGem ? 12 : 8;
         this.hitbox = new Vector(w, 12);
 
-        if (!isGem) {
+        this.specialTimer = 0;
+        if (!isGem && !isFlying) {
 
             this.target.y = BASE_GRAVITY;
             this.center.y = 2;
         }
 
-        this.specialTimer = (((x / 16) | 0) % 2)*Math.PI;
-
+        this.specialTimer = (((x / 16) | 0) % 2)*(Math.PI*(isFlying ? 0.5 : 1.0));
+        
         this.touchSurface = true;
         this.didTouchGround = false;
 
-        this.getCollision = type != TouchableType.FlyingBall;
-        this.friction.y = this.getCollision ? 0.15 : 0.05;
+        this.getCollision = !isFlying;
+        this.friction.y = isFlying ? 0.05 : 0.15;
     }
 
 
@@ -235,15 +243,14 @@ export class TouchableObject extends GameObject {
         let frame = 0;
         let bsh = 16;
 
-        if (this.type == TouchableType.StaticBall ||
-            this.type == TouchableType.JumpingBall) {
+        if ([2,3,5].includes(this.type)) {
 
             frame = BODY_FRAME[(this.specialTimer | 0)];
             faceShiftY = Math.abs(this.speed.y) > FACE_EPS ? Math.sign(this.speed.y)*2 : 0;
         }
         else if (this.type == TouchableType.DrivingBall) {
 
-            -- dy;
+            // -- dy;
             bsh = 14;
             faceShiftY = 2;
             faceShiftX = -1;
@@ -275,13 +282,14 @@ export class TouchableObject extends GameObject {
         const STOMP_W = 20;
         const STOMP_Y = -6;
 
-        if (!this.exist || !player.doesExist() || this.isDying() || player.isDying())
+        if (!this.exist || !player.doesExist() || 
+            this.isDying() || player.isDying())
             return;
 
         const isGem = this.type == TouchableType.Gem;
 
         let stompx = this.pos.x - STOMP_W/2;
-        let stompy = this.pos.y + STOMP_Y;
+        let stompy = this.pos.y + this.center.y + STOMP_Y;
 
         if (!isGem && player.doesOverlaySpear(this)) {
 
@@ -311,7 +319,5 @@ export class TouchableObject extends GameObject {
                 this.deathTimer = 0.0;
             }
         }
-
-        // TODO: Stomp and kill with a spear (if I ever implement a spear, that is)
     }
 }

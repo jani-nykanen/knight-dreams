@@ -157,7 +157,7 @@ export class Terrain {
     }
 
 
-    private spawnTouchables(event : ProgramEvent) : void {
+    private spawnTouchables(event : ProgramEvent) : boolean {
 
         const REPEAT_WEIGHT = [0.50, 0.30, 0.20];
 
@@ -165,20 +165,20 @@ export class Terrain {
 
             if (this.layerCheck()) {
 
-                return;
+                return false;
             }
             -- this.touchableRepeat;
             this.spawnTouchableObject(event);
-            return;
+            return true;
         }
 
         if ((-- this.touchableTimer) > 0) 
-            return;
+            return false;
 
         this.touchableLayer = 1 - this.touchableLayer;
         if (this.layerCheck()) {
             
-            return;
+            return false;
         }
 
         this.touchableType = this.touchableType == TouchableType.Gem ? 
@@ -189,6 +189,8 @@ export class Terrain {
         this.touchableTimer = this.touchableRepeat + sampleUniform(TOUCHABLE_TIMER_MIN, TOUCHABLE_TIMER_MAX);
 
         this.spawnTouchableObject(event);
+
+        return true;
     }
 
 
@@ -240,8 +242,10 @@ export class Terrain {
                 l.update(this.tilePointer);
             }
             this.spawnSpecialPlatform(event);
-            this.spawnTouchables(event);
-            this.spawnFlyingEnemies(event);
+            if (!this.spawnTouchables(event)) {
+                
+                this.spawnFlyingEnemies(event);
+            }
 
             this.tilePointer = (this.tilePointer + 1) % this.width;
         }

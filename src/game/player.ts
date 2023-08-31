@@ -86,7 +86,7 @@ export class Player extends GameObject {
         const FLY_SPEED_LOW = 2.0;
         const FLY_TIME = 60;
 
-        const FUEL_CONSUMPTION = 1.0/300.0;
+        const FUEL_CONSUMPTION = 1.0/180.0;
 
         let dir = 0;
         if ((event.input.getAction("r") & InputState.DownOrPressed) != 0) {
@@ -297,6 +297,8 @@ export class Player extends GameObject {
 
     protected updateEvent(globalSpeed : number, event : ProgramEvent) : void {
         
+        const SCORE_TIME = 6;
+
         this.control(event);
         this.updateTimers(event);
         this.checkScreenCollisions(event);
@@ -304,9 +306,9 @@ export class Player extends GameObject {
 
         this.touchSurface = false;
 
-        if ((this.scoreTimer += globalSpeed*event.tick) >= 60) {
+        if ((this.scoreTimer += globalSpeed*event.tick) >= SCORE_TIME) {
 
-            this.scoreTimer -= 60;
+            this.scoreTimer -= SCORE_TIME;
             this.addScore(10);
         }
 

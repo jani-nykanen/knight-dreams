@@ -99,6 +99,22 @@ export class GroundLayer {
     
         this.layerType = type;
         this.shift = shift;
+
+        if (type == GroundLayerType.Foreground) {
+
+            this.generateInitialDecorations();
+        }
+    }
+
+
+    private generateInitialDecorations() : void {
+
+        let x1 = sampleUniform(2, this.width/2);
+        const type = sampleUniform(1, 3);
+        this.decorations[x1] = type;
+
+        x1 = sampleUniform(x1 + 4, this.width - 4);
+        this.decorations[x1] = 1 + (((type - 1) + sampleUniform(1, 2)) % 3);
     }
 
 
