@@ -1,4 +1,4 @@
-import { negMod, sampleUniform, weightedProbability } from "../common/math.js";
+import { negMod, sampleUniform, sampleUniformInterpolate, weightedProbability, weightedProbabilityInterpolate } from "../common/math.js";
 import { AssetManager } from "../core/assets.js";
 import { ProgramEvent } from "../core/event.js";
 import { Canvas } from "../renderer/canvas.js";
@@ -13,11 +13,14 @@ import { TouchableObject, TouchableType } from "./touchableobject.js";
 const SPECIAL_WAIT_MIN = 4;
 const SPECIAL_WAIT_MAX = 16;
 
-const TOUCHABLE_TIMER_MIN = 2;
-const TOUCHABLE_TIMER_MAX = 12;
+const TOUCHABLE_TIMER_MIN = [4, 1];
+const TOUCHABLE_TIMER_MAX = [14, 6];
 
-const FLYING_ENEMY_TIMER_MIN = 8;
-const FLYING_ENEMY_TIMER_MAX = 16;
+const FLYING_ENEMY_TIMER_MIN = [32, 6];
+const FLYING_ENEMY_TIMER_MAX = [64, 12];
+
+const REPEAT_WEIGHT = [[0.50, 0.30, 0.20], [0.10, 0.50, 0.40]];
+const ENEMY_WEIGHTS = [[0.40, 0.30, 0.20, 0.10], [0.25, 0.25, 0.25, 0.25]];
 
 const GEM_OFF_Y = -10;
 
@@ -60,8 +63,8 @@ export class Terrain {
         this.specialWait = sampleUniform(SPECIAL_WAIT_MIN, SPECIAL_WAIT_MAX);
         this.specialPlatforms = new Array<SpecialPlatform> ();
 
-        this.touchableTimer = sampleUniform(TOUCHABLE_TIMER_MIN, TOUCHABLE_TIMER_MAX);
-        this.flyingEnemyTimer = sampleUniform(FLYING_ENEMY_TIMER_MIN, FLYING_ENEMY_TIMER_MAX);
+        this.touchableTimer = sampleUniform(TOUCHABLE_TIMER_MIN[0], TOUCHABLE_TIMER_MAX[0]);
+        this.flyingEnemyTimer = sampleUniform(FLYING_ENEMY_TIMER_MIN[0], FLYING_ENEMY_TIMER_MAX[0]);
         this.touchables = new Array<TouchableObject> ();
     }
 
@@ -157,9 +160,7 @@ export class Terrain {
     }
 
 
-    private spawnTouchables(event : ProgramEvent) : boolean {
-
-        const REPEAT_WEIGHT = [0.50, 0.30, 0.20];
+    private spawnTouchables(t : number, event : ProgramEvent) : boolean {
 
         if (this.touchableRepeat > 0) {
 
@@ -182,11 +183,11 @@ export class Terrain {
         }
 
         this.touchableType = this.touchableType == TouchableType.Gem ? 
-            sampleUniform(TouchableType.StaticBall, TouchableType.LastGroundEnemy) : 
+            2 + weightedProbabilityInterpolate(ENEMY_WEIGHTS[0], ENEMY_WEIGHTS[1], t) : 
             TouchableType.Gem;
 
-        this.touchableRepeat = weightedProbability(REPEAT_WEIGHT); // + 1?
-        this.touchableTimer = this.touchableRepeat + sampleUniform(TOUCHABLE_TIMER_MIN, TOUCHABLE_TIMER_MAX);
+        this.touchableRepeat = weightedProbabilityInterpolate(REPEAT_WEIGHT[0], REPEAT_WEIGHT[1], t); // + 1?
+        this.touchableTimer = this.touchableRepeat + sampleUniformInterpolate(t, TOUCHABLE_TIMER_MIN, TOUCHABLE_TIMER_MAX);
 
         this.spawnTouchableObject(event);
 
@@ -194,9 +195,8 @@ export class Terrain {
     }
 
 
-    private spawnFlyingEnemies(event : ProgramEvent) : void {
+    private spawnFlyingEnemies(t : number, event : ProgramEvent) : void {
 
-        const REPEAT_WEIGHT = [0.50, 0.30, 0.20];
         const OFFSET_Y = 32;    
 
         if ((-- this.flyingEnemyTimer) > 0)
@@ -204,9 +204,9 @@ export class Terrain {
 
         const layer = Math.random() < 0.5 ? 0 : 1;
         const y = event.screenHeight - this.layers[layer].getHeight()*16 - OFFSET_Y;
-        const repeat = weightedProbability(REPEAT_WEIGHT);
+        const repeat = weightedProbabilityInterpolate(REPEAT_WEIGHT[0], REPEAT_WEIGHT[1], t);
 
-        this.flyingEnemyTimer = sampleUniform(FLYING_ENEMY_TIMER_MIN, FLYING_ENEMY_TIMER_MAX);
+        this.flyingEnemyTimer = sampleUniformInterpolate(t, FLYING_ENEMY_TIMER_MIN, FLYING_ENEMY_TIMER_MAX);
 
         for (let i = 0; i < repeat; ++ i) {
 
@@ -217,7 +217,7 @@ export class Terrain {
     }
 
 
-    public update(player : Player, globalSpeed : number, event : ProgramEvent) : void {
+    public update(player : Player, playTimeFactor : number, globalSpeed : number, event : ProgramEvent) : void {
 
         for (let p of this.specialPlatforms) {
 
@@ -239,12 +239,12 @@ export class Terrain {
             this.tileOffset -= 16;
             for (let l of this.layers) {
 
-                l.update(this.tilePointer);
+                l.update(this.tilePointer, playTimeFactor);
             }
             this.spawnSpecialPlatform(event);
-            if (!this.spawnTouchables(event)) {
+            if (!this.spawnTouchables(playTimeFactor, event)) {
                 
-                this.spawnFlyingEnemies(event);
+                this.spawnFlyingEnemies(playTimeFactor, event);
             }
 
             this.tilePointer = (this.tilePointer + 1) % this.width;

@@ -2,7 +2,6 @@ import { Vector } from "../common/vector.js";
 import { AssetManager } from "../core/assets.js";
 import { ProgramEvent } from "../core/event.js";
 import { Canvas } from "../renderer/canvas.js";
-import { Sprite } from "../renderer/sprite.js";
 import { GameObject } from "./gameobject.js";
 import { Player } from "./player.js";
 import { drawPropeller } from "./propeller.js";
@@ -55,7 +54,7 @@ export class TouchableObject extends GameObject {
         this.dying = true;
         this.deathTimer = 0.0;
 
-        player.addScore(1000);
+        player.addScore(100);
     }
 
 

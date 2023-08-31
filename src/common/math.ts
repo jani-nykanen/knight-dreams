@@ -9,6 +9,15 @@ export const clamp = (x : number, min : number, max : number) : number => Math.m
 export const sampleUniform = (min : number, max : number) : number => min + ( (Math.random() * (max - min + 1)) | 0 );
 
 
+export const sampleUniformInterpolate = (t : number, min : number[], max : number[]) : number => {
+
+    const imin = ((1 - t)*min[0] + t*min[1]) | 0;
+    const imax = ((1 - t)*max[0] + t*max[1]) | 0;
+
+    return imin + ( (Math.random() * (imax - imin + 1)) | 0 );
+}
+    
+
 export const weightedProbability = (weights : number[]) : number => weightedProbabilityInterpolate(weights, weights, 1.0);
 
 

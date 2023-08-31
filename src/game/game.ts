@@ -9,10 +9,13 @@ import { Camera } from "./camera.js";
 import { updateSpeedAxis } from "./gameobject.js";
 
 
+const SPEED_UP_ALERT_TIME = 180;
+
+
 const scoreToString = (score : number) : string => {
 
     const s = String(score);
-    return "0".repeat(Math.max(0, 7 - s.length)) + s; 
+    return "0".repeat(Math.max(0, 6 - s.length)) + s; 
 }
 
 
@@ -48,6 +51,9 @@ export class Game implements Scene {
 
     private globalSpeed : number = 0.0;
     private targetSpeed : number = 1.0; // 2.0;
+    private playTime : number = 0;
+    private speedUpCount : number = 0;
+    private speedUpAlert : number = 0;
 
     private paused : boolean = false;
     private gameOverPhase : number = 0;
@@ -116,7 +122,9 @@ export class Game implements Scene {
         this.camera.reset();
 
         this.globalSpeed = 0.0;
-        this.targetSpeed = 2.0;
+        this.targetSpeed = 1.0;
+        this.playTime = 0.0;
+        this.speedUpCount = 0;
 
         this.gameOverPhase = 0;
     }
@@ -254,16 +262,40 @@ export class Game implements Scene {
     // public init(param : SceneParameter, event : ProgramEvent) : void {}
 
 
+    private updateTimerAndSpeed(event : ProgramEvent) : void {
+
+        const SPEED_UP_INTERVALS = [30, 60, 90, 120];
+
+        if (this.speedUpAlert > 0) {
+
+            this.speedUpAlert -= event.tick;
+        }
+
+        this.playTime += event.tick
+        if (this.speedUpCount < SPEED_UP_INTERVALS.length &&
+            this.playTime >= SPEED_UP_INTERVALS[this.speedUpCount]*60) {
+
+            this.targetSpeed = 1.0 + (++ this.speedUpCount)*0.25;
+            this.speedUpAlert = SPEED_UP_ALERT_TIME;
+        }
+
+        this.globalSpeed = updateSpeedAxis(
+            this.globalSpeed, 
+            this.targetSpeed, 
+            1.0/60.0*(this.gameOverPhase*2 + 1));
+    }
+
+
     public update(event : ProgramEvent) : void {
 
         const CLOUD_BASE_SPEED = 0.25;
         const CLOUD_SPEED_FACTOR = 0.125;
         const TRANSITION_SPEED = 1.0/30.0;
         const ENTER_SPEED = 1.0/60.0;
+        const MAX_PLAY_TIME_MOD = 180*60;
 
         if (this.transitionTimer > 0.0) {
 
-            // this.transitionTimer -= TRANSITION_SPEED*event.tick;
             if ((this.transitionTimer -= TRANSITION_SPEED*event.tick) <= 0.0 &&
                 this.gameOverPhase == 2) {
 
@@ -316,12 +348,8 @@ export class Game implements Scene {
         if (this.paused)
             return;
 
-        this.globalSpeed = updateSpeedAxis(
-            this.globalSpeed, 
-            this.targetSpeed, 
-            1.0/60.0*(this.gameOverPhase*2 + 1));
-
-        this.terrain.update(this.player, this.globalSpeed, event);
+        this.updateTimerAndSpeed(event);
+        this.terrain.update(this.player, this.playTime/MAX_PLAY_TIME_MOD, this.globalSpeed, event);
 
         this.player.update(this.globalSpeed, event);
         if (this.gameOverPhase == 0 && this.player.isDying()) {
@@ -349,6 +377,8 @@ export class Game implements Scene {
     public redraw(canvas : Canvas, assets : AssetManager) : void {
 
         const SHAKE_TIME = 30;
+
+        const fontYellow = assets.getBitmap("fy");
 
         canvas.moveTo();
 
@@ -380,8 +410,14 @@ export class Game implements Scene {
                 canvas.fillColor("#00000055");
                 canvas.fillRect();
 
-                canvas.drawText(assets.getBitmap("fy"), "PAUSED", 
-                    canvas.width/2, canvas.height/2 - 4, 0, 0, TextAlign.Center);
+                canvas.drawText(fontYellow, "PAUSED", 
+                    canvas.width/2, canvas.height/2 - 4, -1, 0, TextAlign.Center);
+            }
+            else if (this.speedUpAlert > 0 &&
+                ( this.speedUpAlert > 60 || (((this.speedUpAlert/4) | 0) % 2) == 0 ) ) {
+
+                canvas.drawText(fontYellow, "SPEED UP!", 
+                    canvas.width/2, 32, -1, 0, TextAlign.Center);
             }
         }
 

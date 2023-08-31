@@ -1,4 +1,4 @@
-import { clamp, negMod, sampleUniform, weightedProbability } from "../common/math.js";
+import { clamp, negMod, sampleUniform, sampleUniformInterpolate, weightedProbability } from "../common/math.js";
 import { ProgramEvent } from "../core/event.js";
 import { Bitmap } from "../renderer/bitmap.js";
 import { Canvas } from "../renderer/canvas.js";
@@ -17,8 +17,8 @@ const MAX_HEIGHT = [5, 4];
 const DECORATION_WAIT_MIN = 8;
 const DECORATION_WAIT_MAX = 16;
 
-const SPIKE_WAIT_MIN = 8;
-const SPIKE_WAIT_MAX = 16;
+const SPIKE_WAIT_MIN = [12, 6];
+const SPIKE_WAIT_MAX = [18, 12];
 
 const INITIAL_HEIGHT = [2, 0];
 const INITIAL_TYPE = [TileType.Surface, TileType.None];
@@ -95,7 +95,7 @@ export class GroundLayer {
 
         this.slopeWait = sampleUniform(SLOPE_WAIT_MIN, SLOPE_WAIT_MAX);
         this.decorationWait = sampleUniform(DECORATION_WAIT_MIN, DECORATION_WAIT_MAX);
-        this.spikeWait = sampleUniform(SPIKE_WAIT_MIN, SPIKE_WAIT_MAX);
+        this.spikeWait = sampleUniform(SPIKE_WAIT_MIN[0], SPIKE_WAIT_MAX[0]);
     
         this.layerType = type;
         this.shift = shift;
@@ -293,7 +293,7 @@ export class GroundLayer {
     }
 
 
-    private updateSpikes() : boolean {
+    private updateSpikes(t : number) : boolean {
 
         const SPIKE_COUNT_WEIGHTS = [0.67, 0.33];
 
@@ -311,7 +311,7 @@ export class GroundLayer {
 
         if ((-- this.spikeWait) <= 0) {
 
-            this.spikeWait = sampleUniform(SPIKE_WAIT_MIN, SPIKE_WAIT_MAX);
+            this.spikeWait = sampleUniformInterpolate(t, SPIKE_WAIT_MIN, SPIKE_WAIT_MAX);
             this.spikeCount = 1 + weightedProbability(SPIKE_COUNT_WEIGHTS);
 
             return true;
@@ -320,13 +320,13 @@ export class GroundLayer {
     }
 
 
-    public update(tilePointer : number) : void {
+    public update(tilePointer : number, interpolationWeight : number) : void {
 
         this.updateSlope();
         this.updateType();
 
         this.decorations[tilePointer] = Decoration.None;
-        if (!(this.spikes[tilePointer] = (this.hadSpike = this.updateSpikes()))) {
+        if (!(this.spikes[tilePointer] = (this.hadSpike = this.updateSpikes(interpolationWeight)))) {
 
             this.updateDecorations(tilePointer);
         }

@@ -309,7 +309,7 @@ export class Player extends GameObject {
         if ((this.scoreTimer += globalSpeed*event.tick) >= SCORE_TIME) {
 
             this.scoreTimer -= SCORE_TIME;
-            this.addScore(10);
+            ++ this.score;
         }
 
         this.computeSpearPos();
@@ -461,9 +461,14 @@ export class Player extends GameObject {
     public stompJump() : void {
 
         const STOMP_SPEED = -3.0;
-        
+        // To avoid getting killed when trying to stomp
+        // two enemies...
+        const SAFE_SHIFT = -2.0;
+
         this.speed.y = STOMP_SPEED;
         this.canFly = true;
+
+        this.pos.y += SAFE_SHIFT;
     }
 
 
