@@ -23,7 +23,7 @@ const getHiscore = () : number => {
 
     try {
 
-        return Number(window["localStorage"].getItem("__jnjs13k2023"));
+        return Number(window["localStorage"].getItem("__s"));
     }
     catch (e) {}
     return 0;
@@ -34,7 +34,7 @@ const storeScore = (score : number) : void => {
 
     try {
 
-        window["localStorage"].setItem("__jnjs13k2023", String(score));
+        window["localStorage"].setItem("__s", String(score));
     }
     catch (e) {}
 }
@@ -252,10 +252,8 @@ export class Game implements Scene {
         if (!this.fadeIn)
             t = 1.0 - t;
 
-        const radius = (Math.hypot(canvas.width/2, canvas.height/2)*t*t) | 0;
-
         canvas.fillColor("#000000");
-        canvas.fillCircleOutside(radius);
+        canvas.fillCircleOutside((Math.hypot(canvas.width/2, canvas.height/2)*t*t) | 0);
     }
 
 
@@ -264,7 +262,7 @@ export class Game implements Scene {
 
     private updateTimerAndSpeed(event : ProgramEvent) : void {
 
-        const SPEED_UP_INTERVALS = [30, 60, 90, 120];
+        // const SPEED_UP_INTERVALS = [30, 60, 90, 120];
 
         if (this.speedUpAlert > 0) {
 
@@ -272,8 +270,8 @@ export class Game implements Scene {
         }
 
         this.playTime += event.tick
-        if (this.speedUpCount < SPEED_UP_INTERVALS.length &&
-            this.playTime >= SPEED_UP_INTERVALS[this.speedUpCount]*60) {
+        if (this.speedUpCount < 4 &&
+            this.playTime >= (this.speedUpCount+1)*1200) {
 
             this.targetSpeed = 1.0 + (++ this.speedUpCount)*0.25;
             this.speedUpAlert = SPEED_UP_ALERT_TIME;
@@ -300,7 +298,7 @@ export class Game implements Scene {
                 this.gameOverPhase == 2) {
 
                 this.transitionTimer = 1.0;
-                this.fadeIn = false,
+                this.fadeIn = false;
                 this.reset(event);
             }
             return;

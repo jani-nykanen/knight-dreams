@@ -40,7 +40,7 @@ export class Sample {
 
     public play(volume : number) : void {
 
-        // const FUNC = [ "setValueAtTime", "linearRampToValueAtTime", "exponentialRampToValueAtTime" ];
+        const FUNC = [ "setValueAtTime", "linearRampToValueAtTime", "exponentialRampToValueAtTime" ];
 
         const time = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
@@ -60,7 +60,7 @@ export class Sample {
 
             freq = this.baseSequence[i];
             len = this.baseSequence[i + 1];
-
+/*
             switch (this.ramp) {
             
             case Ramp.Instant:
@@ -78,8 +78,9 @@ export class Sample {
             default:
                 break;
             }
+            */
             
-            // osc.frequency[FUNC[this.ramp]](freq, time + timer);
+            osc.frequency[FUNC[this.ramp]](freq, time + timer);
             timer += 1.0/60.0 * len;
         }
         gain.gain.exponentialRampToValueAtTime(volume * this.fadeVolumeFactor, time + timer);

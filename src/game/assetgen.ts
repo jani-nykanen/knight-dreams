@@ -46,7 +46,7 @@ const COLOR_MAP = [
     "1B80", "1B80", "1B80", "1B80", "1FG0", "1FG0", "1FG0", "1FG0",
     "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", "1780", 
     "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "H2I0", "0HI2", "1780", 
-    "1J50", "1J50", "1J50", "1J50", undefined, undefined, undefined, undefined,
+    "1J50", "1J50", "1J50", "1J50", "0B80", "0B80", "0B80", "0B80",
     "1540", "1540", "1540", "1E70", "1E70", "1E70", "3000", "3000",
     "1540", "1540", "1540", "0K20", "1QP0", "14C0", "1QP0", "1OP0",
     "1DC0", "1DC0", "1DC0", "1DC0", "1DC0", "1DC0", "1OP0", "1OP0",
@@ -57,14 +57,12 @@ const COLOR_MAP = [
 
 const generateFonts = (font : Bitmap, event : ProgramEvent) : void => {
 
-    const fontWhite = BitmapGenerator.applyPalette(font,
+    event.assets.addBitmap("fw",BitmapGenerator.applyPalette(font,
         (new Array<string>(16*4)).fill("0002"),
-        PALETTE);
-    const fontYellow= BitmapGenerator.applyPalette(font,
+        PALETTE));
+    event.assets.addBitmap("fy", BitmapGenerator.applyPalette(font,
         (new Array<string>(16*4)).fill("0003"),
-        PALETTE);
-    event.assets.addBitmap("fw", fontWhite);
-    event.assets.addBitmap("fy", fontYellow);
+        PALETTE));
 }
 
 
@@ -401,7 +399,8 @@ const generateAudio = (event : ProgramEvent) : void => {
             Ramp.Exponential
         )
     );
-
+    // "Bounce" sound for balls, sounds annoying so commented out
+/*
     event.assets.addSample("ab",
         event.audio.createSample(
             [112,  6, 
@@ -411,50 +410,13 @@ const generateAudio = (event : ProgramEvent) : void => {
             "sawtooth", Ramp.Exponential
         )
     );
-
-    // Old samples from another project, some of them might
-    // work here
-/*
-    event.createSample("die",
-            [[192, 4], [144, 8], [96, 16]],
-            0.70, "square", Ramp.Exponential, 0.20
-        );
-
-    event.createSample("jump",
-            [[96, 8], [112, 7], [160, 6], [256, 4]],
-            0.70, "sawtooth", Ramp.Exponential, 0.20
-        );
-    event.createSample("coin",
-            [[256, 3], [400, 4], [480, 5], [512, 10]],
-            0.70, "square", Ramp.Instant, 0.20
-        );
-        event.createSample("kill",
-            [[320, 4], [192, 6], [96, 10]],
-            0.70, "square", Ramp.Linear, 0.20
-        );
-        event.createSample("pause",
-            [[160, 12]],
-            0.60, "square", Ramp.Linear, 0.20
-        );
-        event.createSample("start",
-            [[224, 16]],
-            0.80, "sawtooth", Ramp.Linear, 0.20
-        );
-        event.createSample("choose",
-            [[256, 4]],
-            0.80, "sawtooth", Ramp.Linear, 0.20
-        );
-    event.createSample("select",
-            [[192, 8]],
-            0.80, "sawtooth", Ramp.Linear, 0.20
-        );
-        */
+*/
 }
 
 
 const generate = (event : ProgramEvent) : void => {
 
-    const BALL_NAMES = [ "b1", "b2", "b3", "b4", "b5" ];
+    // const BALL_NAMES = [ "b1", "b2", "b3", "b4", "b5" ];
     const BALL_COLORS = [ 
         ["12M0", "1NM0"],
         ["12K0", "1IK0"],
@@ -503,7 +465,7 @@ const generate = (event : ProgramEvent) : void => {
 
     for (let i = 0; i < 5; ++ i) {
 
-        event.assets.addBitmap(BALL_NAMES[i], 
+        event.assets.addBitmap("b" + String(i+1), 
             BitmapGenerator.applyPalette(baseBall, 
                 ballColorMap.map(j => BALL_COLORS[i][j]), 
                 PALETTE)

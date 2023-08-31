@@ -14,10 +14,10 @@ const SPECIAL_WAIT_MIN = 4;
 const SPECIAL_WAIT_MAX = 16;
 
 const TOUCHABLE_TIMER_MIN = [4, 1];
-const TOUCHABLE_TIMER_MAX = [14, 6];
+const TOUCHABLE_TIMER_MAX = [12, 6];
 
-const FLYING_ENEMY_TIMER_MIN = [32, 6];
-const FLYING_ENEMY_TIMER_MAX = [64, 12];
+const FLYING_ENEMY_TIMER_MIN = [16, 6];
+const FLYING_ENEMY_TIMER_MAX = [32, 12];
 
 const REPEAT_WEIGHT = [[0.50, 0.30, 0.20], [0.10, 0.50, 0.40]];
 const ENEMY_WEIGHTS = [[0.40, 0.30, 0.20, 0.10], [0.25, 0.25, 0.25, 0.25]];
@@ -40,7 +40,7 @@ export class Terrain {
     private touchableTimer : number;
     private touchableRepeat : number = 0;
     private touchableLayer : number = 0;
-    private touchableType : TouchableType = TouchableType.None;
+    private touchableType : TouchableType = TouchableType.Gem;
 
     private flyingEnemyTimer : number = 0;
 

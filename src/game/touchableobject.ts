@@ -117,7 +117,8 @@ export class TouchableObject extends GameObject {
                     this.specialTimer = 0.0;
                     this.speed.y = JUMP_SPEED*jumpFactor;
 
-                    event.audio.playSample(event.assets.getSample("ab"), 0.50);
+                    // This sounds annoying
+                    // event.audio.playSample(event.assets.getSample("ab"), 0.50);
                 }
             }
             break;
@@ -160,6 +161,13 @@ export class TouchableObject extends GameObject {
     public spawn(x : number, y : number, type : TouchableType) : void {
 
         const BASE_GRAVITY = 2.5;
+
+        /*
+        if (type == 0 || type >= TouchableType.FlyingBall) {
+
+            return;
+        }
+        */
 
         this.pos = new Vector(x, y);
         this.speed.zero();

@@ -11,7 +11,7 @@ export class AssetManager {
     private loaded : number = 0;
     private totalAssets : number = 0;
 
-    private emptyImage : Bitmap;
+    // private emptyImage : Bitmap;
 
 
     constructor() {
@@ -20,7 +20,7 @@ export class AssetManager {
         this.samples = new Map<string, Sample> ();
 
         // Faster than dealing with undefined
-        this.emptyImage = new Image(1, 1);
+        // this.emptyImage = new Image(1, 1);
     }
 
 
@@ -51,7 +51,7 @@ export class AssetManager {
     }
 
 
-    public getBitmap = (name : string) : Bitmap => this.bitmaps.get(name) ?? this.emptyImage;
+    public getBitmap = (name : string) : Bitmap => this.bitmaps.get(name) as Bitmap; // ?? this.emptyImage;
     public getSample = (name : string) : Sample | undefined => this.samples.get(name);
 
 

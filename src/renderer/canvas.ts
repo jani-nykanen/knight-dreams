@@ -235,9 +235,8 @@ export class Canvas {
     }
 
 
-    public drawScaledBitmap(bmp : Bitmap, 
-        dx : number, dy : number,
-        dw : number, dh : number, 
+    public drawBitmap(bmp : Bitmap, 
+        dx : number = 0, dy : number = 0,
         sx : number = 0, sy : number = 0, 
         sw : number = bmp.width, sh : number = bmp.height,
         flip = Flip.None) : void {
@@ -254,8 +253,6 @@ export class Canvas {
         sh |= 0;
         dx |= 0;
         dy |= 0;
-        dw |= 0;
-        dh |= 0;
 
         if (saveState) {
 
@@ -264,33 +261,23 @@ export class Canvas {
 
         if ((flip & Flip.Horizontal) != 0) {
 
-            c.translate(dw, 0);
+            c.translate(sw, 0);
             c.scale(-1, 1);
             dx *= -1;
         }
         if ((flip & Flip.Vertical) != 0) {
 
-            c.translate(0, dh);
+            c.translate(0, sh);
             c.scale(1, -1);
             dy *= -1;
         }
 
-        c.drawImage(bmp, sx, sy, sw, sh, dx, dy, dw, dh);
+        c.drawImage(bmp, sx, sy, sw, sh, dx, dy, sw, sh);
 
         if (saveState) {
 
             c.restore();
         }
-    }
-
-
-    public drawBitmap(bmp : Bitmap, 
-        dx : number = 0, dy : number = 0, 
-        sx : number = 0, sy : number = 0, 
-        sw = bmp.width, sh = bmp.height,
-        flip = Flip.None) : void {
-
-        this.drawScaledBitmap(bmp, dx, dy, sw, sh, sx, sy, sw, sh, flip);
     }
 
 
@@ -346,6 +333,7 @@ export class Canvas {
                 y += ch + yoff;
                 continue;
             }
+            
             chr -= 32;
 
             this.drawBitmap(font, x, y,
@@ -367,7 +355,7 @@ export class Canvas {
         // let xoff : number;
         // let yoff : number;
 
-        dy += bmp.height/2;
+        // dy += bmp.height/2;
 
         for (let y = 0; y < bmp.height; ++ y) {
 
@@ -376,7 +364,7 @@ export class Canvas {
             
             c.drawImage(bmp, 0, y, bmp.width, 1,
                 (dx + Math.sin((Math.PI*2*latitude)/bmp.height*y + t*(Math.PI*latitude))*amplitude*t) | 0, 
-                (dy + (y - bmp.height/2)*offset) | 0,
+                (dy + y*offset) | 0,
                 bmp.width, 1)
         }
     }

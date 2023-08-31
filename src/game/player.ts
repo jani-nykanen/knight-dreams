@@ -6,11 +6,59 @@ import { InputState } from "../core/input.js";
 import { Bitmap } from "../renderer/bitmap.js";
 import { Canvas, Flip } from "../renderer/canvas.js";
 import { Sprite } from "../renderer/sprite.js";
+import { ExistingObject, next } from "./existingobject.js";
 import { GameObject } from "./gameobject.js";
 import { drawPropeller } from "./propeller.js";
 
 
 export const DEATH_TIME = 60;
+
+
+class Dust extends ExistingObject {
+    
+    public timer : number = 0.0;
+    public x : number = 0;
+    public y : number = 0;
+
+
+    public spawn(x : number, y : number) : void {
+
+        this.x = x;
+        this.y = y;
+
+        this.timer = 1.0;
+
+        this.exist = true;
+    }
+    
+
+    public update(globalSpeed : number, event : ProgramEvent) : void {
+
+        if (!this.exist)
+            return;
+
+        if ((this.timer -= 1.0/30.0*event.tick) <= 0) {
+
+            this.exist = false;
+            return;
+        }
+
+        this.x -= globalSpeed*event.tick;
+    }
+
+
+    public draw(canvas : Canvas, bmp : Bitmap) : void {
+
+        if (!this.exist)
+            return;
+
+        const px = Math.round(this.x);
+        const py = Math.round(this.y);
+        const frame = Math.round((1.0 - this.timer) * 3.0);
+
+        canvas.drawBitmap(bmp, px - 4, py - 4, 32 + frame*8, 72, 8, 8);
+    }   
+}
 
 
 export class Player extends GameObject {
@@ -33,6 +81,9 @@ export class Player extends GameObject {
 
     private spearPos : Vector;
     private throwTimer : number = 0;
+
+    private dust : Array<Dust>;
+    private dustTimer : number = 10;
 
     private fuel : number = 1.0;
     // Yes, we store this here, I don't have room for another
@@ -57,6 +108,8 @@ export class Player extends GameObject {
 
         this.spearPos = new Vector();
         this.computeSpearPos();
+
+        this.dust = new Array<Dust> ();
 
         // this.initialPos = new Vector(x, y);
     }
@@ -191,10 +244,12 @@ export class Player extends GameObject {
         if (this.speed.x < 0 && this.pos.x - this.hitbox.x/2 <= 0) {
 
             this.pos.x = this.hitbox.x/2;
+            this.speed.x = 0;
         }
         else if (this.speed.x > 0 && this.pos.x + this.hitbox.x/2 >= event.screenWidth) {
 
             this.pos.x = event.screenWidth - this.hitbox.x/2;
+            this.speed.x = 0;
         }
     
         if (this.pos.y > event.screenHeight) {
@@ -236,6 +291,25 @@ export class Player extends GameObject {
 
                 event.audio.playSample(event.assets.getSample("ap"), 0.60);
             }
+        }
+    }
+
+
+    private updateDust(globalSpeed : number, event : ProgramEvent) : void {
+
+        const dustTime = this.propelling ? 6 : 8;
+        const speed = this.propelling ? 1 : globalSpeed;
+
+        if ((this.touchSurface || this.propelling) && 
+            (this.dustTimer -= speed*event.tick) <= 0) {
+
+            this.dustTimer += dustTime;
+            next<Dust>(Dust, this.dust).spawn(this.pos.x - 4, this.pos.y + 7);
+        }
+        
+        for (let d of this.dust) {
+
+            d.update(globalSpeed, event);
         }
     }
 
@@ -303,6 +377,7 @@ export class Player extends GameObject {
         this.updateTimers(event);
         this.checkScreenCollisions(event);
         this.animate(globalSpeed, event);
+        this.updateDust(globalSpeed, event);
 
         this.touchSurface = false;
 
@@ -318,6 +393,11 @@ export class Player extends GameObject {
 
     protected die(globalSpeed : number, event : ProgramEvent) : boolean { 
         
+        for (let d of this.dust) {
+
+            d.update(globalSpeed, event);
+        }
+
         return (this.deathTimer += event.tick) >= DEATH_TIME;
     }
 
@@ -340,10 +420,6 @@ export class Player extends GameObject {
         const SX = [0, 1, 0, 2, 0, 0, 1];
         const SY = [0, 0, 0, 0, 1, 0, 1];
         const FEATHER = [0, 1, 0, 2, 1, 0, 2];
-
-        const PROPELLER_FLIP = [Flip.None, Flip.None, Flip.None, Flip.Horizontal];
-        const PROPELLER_SX = [32, 48, 56, 48];
-        const PROPELLER_SW = [16, 8, 8, 8];
         
         if (!this.exist)
             return;
@@ -351,13 +427,18 @@ export class Player extends GameObject {
         const dx = Math.round(this.pos.x) - 8;
         const dy = Math.round(this.pos.y) - 7;
 
+        const bmp = assets.getBitmap("b");
+
+        for (let d of this.dust) {
+
+            d.draw(canvas, bmp);
+        }
+
         if (this.dying) {
 
             this.drawDeathBalls(canvas);
             return;
         }
-
-        const bmp = assets.getBitmap("b");
 
         const sx = SX[this.spr.getFrame()]*16;
         const sy = 40 + SY[this.spr.getFrame()]*8;
