@@ -23,7 +23,8 @@ export class AudioPlayer {
         baseVolume = 1.0,
         type : OscillatorType = "square",
         ramp : Ramp = Ramp.Exponential,
-        fadeVolumeFactor : number = 0.5) : Sample => new Sample(this.ctx, sequence, baseVolume, type, ramp, fadeVolumeFactor);
+        fadeVolumeFactor : number = 0.5,
+        attackTime : number = 2) : Sample => new Sample(this.ctx, sequence, baseVolume, type, ramp, fadeVolumeFactor, attackTime);
 
 
     public playSample(s : Sample | undefined, volume = 1.0) : void {

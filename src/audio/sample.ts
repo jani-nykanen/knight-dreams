@@ -19,13 +19,15 @@ export class Sample {
     private type : OscillatorType;
     private ramp : Ramp;
     private fadeVolumeFactor : number;
+    private attackTime : number;
 
     private oscillator : OscillatorNode | undefined = undefined;
 
 
     constructor(ctx : AudioContext, sequence : number[], 
-        baseVolume = 1.0, type : OscillatorType = "square",
-        ramp = Ramp.Exponential, fadeVolumeFactor = 0.20) {
+        baseVolume : number, type : OscillatorType,
+        ramp : Ramp, fadeVolumeFactor : number,
+        attackTime : number) {
 
         this.ctx = ctx;
 
@@ -35,6 +37,7 @@ export class Sample {
         this.type = type;
         this.ramp = ramp;
         this.fadeVolumeFactor = fadeVolumeFactor;
+        this.attackTime = attackTime;
     }
 
 
@@ -51,7 +54,8 @@ export class Sample {
         volume *= this.baseVolume;
 
         osc.frequency.setValueAtTime(this.baseSequence[0], time);
-        gain.gain.setValueAtTime(clamp(volume, 0.01, 1.0), time);
+        gain.gain.setValueAtTime(0.01, time);
+        gain.gain.exponentialRampToValueAtTime(clamp(volume, 0.01, 1.0), time + this.attackTime/60.0);
 
         let timer = 0.0;
         let freq : number;
@@ -81,7 +85,7 @@ export class Sample {
             */
             
             osc.frequency[FUNC[this.ramp]](freq, time + timer);
-            timer += 1.0/60.0 * len;
+            timer += 1.0/60.0*len;
         }
         gain.gain.exponentialRampToValueAtTime(volume * this.fadeVolumeFactor, time + timer);
         

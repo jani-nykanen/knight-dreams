@@ -310,11 +310,12 @@ const generateGameOverTextBase = (c : CanvasRenderingContext2D,
 const generateLogoBase = (c : CanvasRenderingContext2D, 
     width : number, height : number, bmp : (Bitmap) []) : void => {
 
-    c.font = "bold 24px Arial";
+    c.font = "bold 26px Arial";
     c.textAlign = "center";
 
     c.fillStyle = "#ffffff";
-    c.fillText("Game\nTitle", width/2, height - 2);
+    c.fillText("Knight", width/2, height/2 - 6);
+    c.fillText("Dreams", width/2, height - 2);
 }
 
 
@@ -340,65 +341,95 @@ const generateAudio = (event : ProgramEvent) : void => {
              112, 6, 
              160, 5, 
              256, 3], 
-            0.70,
-            "sawtooth", Ramp.Exponential
+            0.60,
+            "sawtooth", 
+            Ramp.Exponential,
+            0.50, 6
         )
     );
 
     event.assets.addSample("ag",
         event.audio.createSample(
-            [128, 3, 
+            [128, 4, 
              200, 4, 
              320, 10],
-            0.70,
-            "sawtooth", 
-            Ramp.Instant
+            0.40,
+            "square", 
+            Ramp.Instant, 
+            0.50, 4,
         )
     );
 
     event.assets.addSample("ap",
         event.audio.createSample(
-            [96, 2], 0.70,
+            [96, 3], 
+            0.70,
             "sawtooth", 
-            Ramp.Instant
+            Ramp.Instant,
+            0.50,
+            2
         )
     );
 
     event.assets.addSample("ad",
         event.audio.createSample(
-            [96, 4, 144, 8, 96, 10, 64, 16], 
+            [96, 8, 
+            144, 8, 
+            96, 10, 
+            64, 16], 
             0.50,
             "square", 
-            Ramp.Exponential, 0.50
+            Ramp.Exponential, 
+            0.50, 6
         )
     );
 
     event.assets.addSample("as",
         event.audio.createSample(
-            [224, 16],
+            [224, 20],
             0.50,
             "sawtooth", 
-            Ramp.Linear
+            Ramp.Linear,
+            0.50, 6
         )
     );
 
     event.assets.addSample("ak",
         event.audio.createSample(
-            [320, 4, 192, 6, 80, 8],
-            0.60,
+            [320, 6, 192, 4, 80, 10],
+            0.55,
             "square", 
-            Ramp.Exponential, 0.30
+            Ramp.Linear, 
+            0.50, 4
         )
     );
 
     event.assets.addSample("aa",
         event.audio.createSample(
-            [128, 4, 256, 6],
-            0.70,
-            "sawtooth", 
-            Ramp.Exponential
+            [96, 4,
+            128, 8, 
+            256, 6],
+            0.40,
+            "square", 
+            Ramp.Exponential,
+            0.50, 4
         )
     );
+
+    event.assets.addSample("au",
+        event.audio.createSample(
+            [96, 6, 
+            192, 4, 
+            128, 4, 
+            192, 6, 
+            256, 12],
+            0.50,
+            "square", 
+            Ramp.Linear,
+            0.50, 6
+        )
+    );
+
     // "Bounce" sound for balls, sounds annoying so commented out
 /*
     event.assets.addSample("ab",
@@ -443,15 +474,15 @@ const generate = (event : ProgramEvent) : void => {
     const gameoverDark = BitmapGenerator.createCustom(112, 20, [], generateGameOverTextBase,
         [85, 0, 0], 192);
 
-    const logoBase = BitmapGenerator.createCustom(128, 24, [], generateLogoBase,
+    const logoBase = BitmapGenerator.createCustom(96, 49, [], generateLogoBase,
         [255, 85, 0], 192);
-    const logoDark = BitmapGenerator.createCustom(128, 24, [], generateLogoBase,
+    const logoDark = BitmapGenerator.createCustom(96, 49, [], generateLogoBase,
         [85, 0, 0], 192);    
 
     event.assets.addBitmap("g", 
         BitmapGenerator.createCustom(114, 22, [gameoverDark, gameoverBase], generateOutlinedText));   
     event.assets.addBitmap("l", 
-        BitmapGenerator.createCustom(130, 26, [logoDark, logoBase], generateOutlinedText));  
+        BitmapGenerator.createCustom(100, 50, [logoDark, logoBase], generateOutlinedText));  
 
     // Not baseball, mind you
 

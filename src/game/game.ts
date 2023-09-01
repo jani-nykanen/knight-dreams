@@ -223,11 +223,11 @@ export class Game implements Scene {
         canvas.fillColor("#00000055");
         canvas.fillRect();
 
-        canvas.drawVerticallyWavingBitmap(bmpLogo, w/2 - bmpLogo.width/2, 32, Math.PI*2, 4, this.enterTimer*Math.PI*2);
+        canvas.drawVerticallyWavingBitmap(bmpLogo, w/2 - bmpLogo.width/2, 16, Math.PI*2, 4, this.enterTimer*Math.PI*2);
 
         if (this.enterTimer >= 0.5) {
             
-            canvas.drawText(bmpFont, "PRESS ENTER", w/2, h - 56, -1, 0, TextAlign.Center);
+            canvas.drawText(bmpFont, "PRESS ENTER", w/2, h - 52, -1, 0, TextAlign.Center);
         }
 
         canvas.drawText(bmpFont, "$2023 JANI NYK%NEN", w/2, h - 9, -1, 0, TextAlign.Center);
@@ -275,6 +275,8 @@ export class Game implements Scene {
 
             this.targetSpeed = 1.0 + (++ this.speedUpCount)*0.25;
             this.speedUpAlert = SPEED_UP_ALERT_TIME;
+
+            event.audio.playSample(event.assets.getSample("au"), 0.50);
         }
 
         this.globalSpeed = updateSpeedAxis(
