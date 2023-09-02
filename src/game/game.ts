@@ -145,7 +145,7 @@ export class Game implements Scene {
             canvas.fillRect();
 
             canvas.drawText(fontYellow, "SCORE: " + scoreToString(this.player.getScore()), cx, 80, -1, 0, TextAlign.Center);
-            canvas.drawText(fontYellow, "HI-SCORE: " + scoreToString(this.hiscore), cx, 96, -1, 0, TextAlign.Center);
+            canvas.drawText(fontYellow, "BEST: " + scoreToString(this.hiscore), cx, 96, -1, 0, TextAlign.Center);
 
             if (this.enterTimer >= 0.5) {
             
