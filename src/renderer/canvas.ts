@@ -287,6 +287,9 @@ export class Canvas {
 
         const c = this.ctx;
 
+        dx += this.translation.x;
+        dy += this.translation.y;
+
         let y : number;
         let t : number;
         for (let x = 0; x < bmp.width; ++ x) {
@@ -294,7 +297,7 @@ export class Canvas {
             t = shift + (x / bmp.width) * period;
             y = Math.round(Math.sin(t) * amplitude);
 
-            c.drawImage(bmp, x, 0, 1, bmp.height, dx + x, dy + y, 1, bmp.height);
+            c.drawImage(bmp, x | 0, 0, 1, bmp.height, (dx + x) | 0, (dy + y) | 0, 1, bmp.height);
         }
     }
 

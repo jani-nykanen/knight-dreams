@@ -420,11 +420,21 @@ const generateAudio = (event : ProgramEvent) : void => {
             192, 4, 
             128, 4, 
             192, 6, 
-            256, 12],
+            256, 16],
             0.50,
             "square", 
             Ramp.Linear,
             6
+        )
+    );
+
+    event.assets.addSample("ac",
+        event.audio.createSample(
+            [128, 8],
+            0.50,
+            "sawtooth", 
+            Ramp.Instant,
+            1
         )
     );
     

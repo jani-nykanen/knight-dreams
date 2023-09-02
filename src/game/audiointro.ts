@@ -63,6 +63,10 @@ export class AudioIntro implements Scene {
 
             event.audio.toggle(this.cursorPos == 0);
             event.scenes.changeScene("g");
+
+            // Playing the first sound here makes sure the next sound is
+            // played with 100% probability...
+            event.audio.playSample(event.assets.getSample("ac"), 0.60);
         }
     }
 

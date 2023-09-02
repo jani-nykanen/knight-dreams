@@ -12,12 +12,12 @@ const initialEvent = (event : ProgramEvent) : void => {
     // Yes, I had to manually shorten these names to save
     // some bytes. It's ugly, but necessary
 
-    event.input.addAction("l", ["ArrowLeft"])
-    event.input.addAction("r", ["ArrowRight"])
-    event.input.addAction("u", ["ArrowUp"])
-    event.input.addAction("d", ["ArrowDown"])
+    event.input.addAction("l", ["ArrowLeft", "KeyA"])
+    event.input.addAction("r", ["ArrowRight", "KeyD"])
+    event.input.addAction("u", ["ArrowUp", "KeyW"])
+    event.input.addAction("d", ["ArrowDown", "KeyS"])
     event.input.addAction("s", ["Enter", "Space"])
-    event.input.addAction("j", ["ArrowUp"])
+    event.input.addAction("j", ["ArrowUp", "KeyW"])
     event.input.addAction("t", ["Space"])
     event.input.addAction("p", ["Enter"])
 

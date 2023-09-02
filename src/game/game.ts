@@ -224,6 +224,13 @@ export class Game implements Scene {
         canvas.fillColor("#00000055");
         canvas.fillRect();
 
+        let moveY = 0;
+        if (this.transitionTimer > 0) {
+
+            moveY = this.transitionTimer * canvas.height;
+        }
+        canvas.move(0, Math.round(moveY));
+
         canvas.drawVerticallyWavingBitmap(bmpLogo, w/2 - bmpLogo.width/2, 12, Math.PI*2, 4, this.enterTimer*Math.PI*2);
         // canvas.drawBitmap(bmpLogo, w/2 - bmpLogo.width/2, 16);
 
@@ -250,6 +257,8 @@ export class Game implements Scene {
         canvas.drawBitmap(assets.getBitmap("b4"), 48, 0);
         canvas.drawBitmap(assets.getBitmap("b5"), 64, 0);
         */
+
+        canvas.moveTo();
     }
 
 
@@ -304,9 +313,11 @@ export class Game implements Scene {
         const ENTER_SPEED = 1.0/60.0;
         const MAX_PLAY_TIME_MOD = 180*60;
 
+        const speedFactor = this.titleScreenActive ? 0.5 : 1.0;
+
         if (this.transitionTimer > 0.0) {
 
-            if ((this.transitionTimer -= TRANSITION_SPEED*event.tick) <= 0.0 &&
+            if ((this.transitionTimer -= TRANSITION_SPEED*speedFactor*event.tick) <= 0.0 &&
                 this.gameOverPhase == 2) {
 
                 this.transitionTimer = 1.0;
