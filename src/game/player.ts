@@ -384,7 +384,7 @@ export class Player extends GameObject {
         if ((this.scoreTimer += globalSpeed*event.tick) >= SCORE_TIME) {
 
             this.scoreTimer -= SCORE_TIME;
-            ++ this.score;
+            this.addScore(1);
         }
 
         this.computeSpearPos();

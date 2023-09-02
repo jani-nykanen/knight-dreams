@@ -67,6 +67,9 @@ export class Game implements Scene {
     private enterTimer : number = 0.49;
     private gameStarted : boolean = false;
 
+    // For animation
+    private oldFuel : number = 1.0;
+
 
     constructor(event : ProgramEvent) {
 
@@ -125,6 +128,8 @@ export class Game implements Scene {
         this.targetSpeed = 1.0;
         this.playTime = 0.0;
         this.speedUpCount = 0;
+        this.speedUpAlert = 0;
+        this.oldFuel = 1.0;
 
         this.gameOverPhase = 0;
     }
@@ -198,8 +203,8 @@ export class Game implements Scene {
             canvas.fillRect(BAR_X + i, BAR_Y + i, BAR_WIDTH - i*2, BAR_HEIGHT - i*2);
         }
 
-        const fillLevel = (this.player.getFuel() * (BAR_WIDTH - 2)) | 0;
-        const barIndex = 3 - Math.round(this.player.getFuel()*3);
+        const fillLevel = (this.oldFuel * (BAR_WIDTH - 2)) | 0;
+        const barIndex = 3 - Math.round(this.oldFuel*3);
 
         if (fillLevel > 1) {
 
@@ -231,7 +236,7 @@ export class Game implements Scene {
         }
         canvas.move(0, Math.round(moveY));
 
-        canvas.drawVerticallyWavingBitmap(bmpLogo, w/2 - bmpLogo.width/2, 12, Math.PI*2, 4, this.enterTimer*Math.PI*2);
+        canvas.drawVerticallyWavingBitmap(bmpLogo, w/2 - bmpLogo.width/2, 12, Math.PI*2, 4, (this.enterTimer + this.transitionTimer)*Math.PI*2);
         // canvas.drawBitmap(bmpLogo, w/2 - bmpLogo.width/2, 16);
 
         // Controls
@@ -244,7 +249,7 @@ export class Game implements Scene {
 
         if (this.enterTimer >= 0.5) {
             
-            canvas.drawText(bmpFont, "PRESS ENTER", w/2, h - 32, -1, 0, TextAlign.Center);
+            canvas.drawText(bmpFont, "PRESS ENTER", w/2, h - 28, -1, 0, TextAlign.Center);
         }
 
         canvas.drawText(bmpFont, "$2023 JANI NYK%NEN", w/2, h - 9, -1, 0, TextAlign.Center);
@@ -279,7 +284,7 @@ export class Game implements Scene {
     // public init(param : SceneParameter, event : ProgramEvent) : void {}
 
 
-    private updateTimerAndSpeed(event : ProgramEvent) : void {
+    private updateTimersAndSpeed(event : ProgramEvent) : void {
 
         // const SPEED_UP_INTERVALS = [30, 60, 90, 120];
 
@@ -302,6 +307,8 @@ export class Game implements Scene {
             this.globalSpeed, 
             this.targetSpeed, 
             1.0/60.0*(this.gameOverPhase*2 + 1));
+
+        this.oldFuel = updateSpeedAxis(this.oldFuel, this.player.getFuel(), 1.0/60.0*event.tick);
     }
 
 
@@ -369,7 +376,7 @@ export class Game implements Scene {
         if (this.paused)
             return;
 
-        this.updateTimerAndSpeed(event);
+        this.updateTimersAndSpeed(event);
         this.terrain.update(this.player, this.playTime/MAX_PLAY_TIME_MOD, this.globalSpeed, event);
 
         this.player.update(this.globalSpeed, event);
