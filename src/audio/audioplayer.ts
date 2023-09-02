@@ -6,16 +6,16 @@ export class AudioPlayer {
 
     private ctx : AudioContext;
 
-    private globalVolume : number;
+    // private globalVolume : number;
     private enabled : boolean;
 
 
-    constructor(globalVolume = 1.0) {
+    constructor() {
 
         this.ctx = new AudioContext();
 
         this.enabled = true;
-        this.globalVolume = globalVolume;
+        // this.globalVolume = globalVolume;
     }
 
 
@@ -23,18 +23,21 @@ export class AudioPlayer {
         baseVolume = 1.0,
         type : OscillatorType = "square",
         ramp : Ramp = Ramp.Exponential,
-        fadeVolumeFactor : number = 0.5,
-        attackTime : number = 2) : Sample => new Sample(this.ctx, sequence, baseVolume, type, ramp, fadeVolumeFactor, attackTime);
+        attackTime : number = 2) : Sample => new Sample(this.ctx, sequence, baseVolume, type, ramp, attackTime);
 
 
     public playSample(s : Sample | undefined, volume = 1.0) : void {
 
-        if (!this.enabled || s === undefined)
+        // Yes it's a cosntant now, need to save some bytes
+        const GLOBAL_VOLUME = 0.40;
+
+        // Let's pretend that it's never undefined
+        if (!this.enabled) // || s === undefined)
             return;
 
         try {
 
-            s.play(volume * this.globalVolume);
+            s.play(volume*GLOBAL_VOLUME);
         }
         catch (e) {}
     }
@@ -42,12 +45,12 @@ export class AudioPlayer {
 
     public toggle = (state = !this.enabled) : boolean => (this.enabled = state);
 
-
+/*
     public setGlobalVolume(vol : number) : void {
 
         this.globalVolume = vol;
     }
-
+*/
 
     public isEnabled = () : boolean => this.enabled;
 

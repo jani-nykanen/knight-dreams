@@ -22,7 +22,7 @@ export class AudioIntro implements Scene {
     private readonly height : number;
 
 
-    constructor(event : ProgramEvent) {
+    constructor() {
 
         const lines = TEXT.split("\n");
 
@@ -40,7 +40,7 @@ export class AudioIntro implements Scene {
         x -= w/2;
         y -= h/2;
 
-        canvas.fillColor("rgba(0, 0, 0, 0.33)");
+        canvas.fillColor("#00000055");
         canvas.fillRect(x + SHADOW_OFFSET, y + SHADOW_OFFSET, w, h);
         
         for (let i = 0; i < COLORS.length; ++ i) {

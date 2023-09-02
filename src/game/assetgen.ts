@@ -245,7 +245,7 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
 
 const generateSky = (c : CanvasRenderingContext2D, 
     width : number, height : number, bmp : (Bitmap) []) : void => {
-
+/*
     const STARS = [
         [32, 16, 0],
         [84, 40, 1],
@@ -262,7 +262,7 @@ const generateSky = (c : CanvasRenderingContext2D,
         [128, 84, 1],
         [176, 88, 0],
     ];
-
+*/
     const circle = (cx : number, cy : number, radius : number) => {
 
         let ny : number;
@@ -289,10 +289,12 @@ const generateSky = (c : CanvasRenderingContext2D,
     circle(width - 66, 26, 26);
 
     // Stars
+    /*
     for (let a of STARS) {
 
         c.drawImage(bmp[0], 24, 88 + a[2]*4, 4, 4, a[0], a[1], 4, 4);
     }
+    */
 }
 
 
@@ -310,12 +312,11 @@ const generateGameOverTextBase = (c : CanvasRenderingContext2D,
 const generateLogoBase = (c : CanvasRenderingContext2D, 
     width : number, height : number, bmp : (Bitmap) []) : void => {
 
-    c.font = "bold 26px Arial";
+    c.font = "bold 19px Arial";
     c.textAlign = "center";
 
     c.fillStyle = "#ffffff";
-    c.fillText("Knight", width/2, height/2 - 6);
-    c.fillText("Dreams", width/2, height - 2);
+    c.fillText("Knight Dreams", width/2, height - 6);
 }
 
 
@@ -344,19 +345,19 @@ const generateAudio = (event : ProgramEvent) : void => {
             0.60,
             "sawtooth", 
             Ramp.Exponential,
-            0.50, 6
+            6
         )
     );
 
     event.assets.addSample("ag",
         event.audio.createSample(
             [128, 4, 
-             200, 4, 
+             192, 4, 
              320, 10],
             0.40,
             "square", 
             Ramp.Instant, 
-            0.50, 4,
+            4,
         )
     );
 
@@ -366,7 +367,6 @@ const generateAudio = (event : ProgramEvent) : void => {
             0.70,
             "sawtooth", 
             Ramp.Instant,
-            0.50,
             2
         )
     );
@@ -380,7 +380,7 @@ const generateAudio = (event : ProgramEvent) : void => {
             0.50,
             "square", 
             Ramp.Exponential, 
-            0.50, 6
+            6
         )
     );
 
@@ -390,7 +390,7 @@ const generateAudio = (event : ProgramEvent) : void => {
             0.50,
             "sawtooth", 
             Ramp.Linear,
-            0.50, 6
+            6
         )
     );
 
@@ -400,7 +400,7 @@ const generateAudio = (event : ProgramEvent) : void => {
             0.55,
             "square", 
             Ramp.Linear, 
-            0.50, 4
+            4
         )
     );
 
@@ -412,10 +412,10 @@ const generateAudio = (event : ProgramEvent) : void => {
             0.40,
             "square", 
             Ramp.Exponential,
-            0.50, 4
+            4
         )
     );
-
+    /*
     event.assets.addSample("au",
         event.audio.createSample(
             [96, 6, 
@@ -426,9 +426,10 @@ const generateAudio = (event : ProgramEvent) : void => {
             0.50,
             "square", 
             Ramp.Linear,
-            0.50, 6
+            6
         )
     );
+    */
 
     // "Bounce" sound for balls, sounds annoying so commented out
 /*
@@ -445,7 +446,7 @@ const generateAudio = (event : ProgramEvent) : void => {
 }
 
 
-const generate = (event : ProgramEvent) : void => {
+export const generateAssets = (event : ProgramEvent) : void => {
 
     // const BALL_NAMES = [ "b1", "b2", "b3", "b4", "b5" ];
     const BALL_COLORS = [ 
@@ -470,19 +471,19 @@ const generate = (event : ProgramEvent) : void => {
         BitmapGenerator.createCustom(192, 144, [coloredBase], generateSky)); 
 
     const gameoverBase = BitmapGenerator.createCustom(112, 20, [], generateGameOverTextBase,
-        [255, 85, 0], 192);
+        [255, 85, 0]);
     const gameoverDark = BitmapGenerator.createCustom(112, 20, [], generateGameOverTextBase,
-        [85, 0, 0], 192);
+        [85, 0, 0]);
 
-    const logoBase = BitmapGenerator.createCustom(96, 49, [], generateLogoBase,
-        [255, 85, 0], 192);
-    const logoDark = BitmapGenerator.createCustom(96, 49, [], generateLogoBase,
-        [85, 0, 0], 192);    
+    const logoBase = BitmapGenerator.createCustom(132, 24, [], generateLogoBase,
+        [255, 85, 0]);
+    const logoDark = BitmapGenerator.createCustom(132, 24, [], generateLogoBase,
+        [85, 0, 0]);    
 
     event.assets.addBitmap("g", 
         BitmapGenerator.createCustom(114, 22, [gameoverDark, gameoverBase], generateOutlinedText));   
     event.assets.addBitmap("l", 
-        BitmapGenerator.createCustom(100, 50, [logoDark, logoBase], generateOutlinedText));  
+        BitmapGenerator.createCustom(134, 26, [logoDark, logoBase], generateOutlinedText));  
 
     // Not baseball, mind you
 
@@ -505,7 +506,3 @@ const generate = (event : ProgramEvent) : void => {
 
     generateAudio(event);
 }
-
-
-export const AssetGen = { generate: generate };
-

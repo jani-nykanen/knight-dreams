@@ -62,7 +62,7 @@ const convertToRGB222 = (imageData : ImageData, len : number, alphaThreshold = 1
 
 const convertToMonochrome = (imageData : ImageData, 
     color : [number, number, number],
-    len : number, alphaThreshold = 128) : void => {
+    len : number) : void => {
 
     for (let i = 0; i < len; ++ i) {
 
@@ -70,7 +70,7 @@ const convertToMonochrome = (imageData : ImageData,
 
             imageData.data[i*4 + j] = color[j];
         }
-        imageData.data[i*4 + 3] = imageData.data[i*4 + 3] < alphaThreshold ? 0 : 255;
+        imageData.data[i*4 + 3] = imageData.data[i*4 + 3] < 192 ? 0 : 255;
     }
 } 
 
@@ -121,7 +121,7 @@ const applyPalette = (image : Bitmap,
 
 const createCustom = (width : number, height : number, params : (Bitmap) [] | undefined,
     event : (c : CanvasRenderingContext2D, width : number, height : number, params : (Bitmap) [] | undefined) => void,
-    monochromeColor : [number, number, number] | undefined = undefined, alphaThreshold = 128) : Bitmap => {
+    monochromeColor : [number, number, number] | undefined = undefined) : Bitmap => {
 
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -137,7 +137,7 @@ const createCustom = (width : number, height : number, params : (Bitmap) [] | un
         ctx.drawImage(canvas, 0, 0);
         imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         convertToMonochrome(imageData, 
-            monochromeColor, width*height, alphaThreshold);
+            monochromeColor, width*height);
         ctx.putImageData(imageData, 0, 0);
     }
     return canvas;

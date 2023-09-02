@@ -318,11 +318,14 @@ export class Canvas {
             dx -= (str.length * (cw + xoff)) / 2.0 ;
             x = dx;
         }
+        // Unused
+        /*
         else if (align == TextAlign.Right) {
             
             dx -= (str.length * (cw + xoff));
             x = dx;
         }
+        */
 
         for (let i = 0; i < str.length; ++ i) {
 

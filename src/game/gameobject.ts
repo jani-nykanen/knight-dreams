@@ -106,7 +106,6 @@ export class GameObject extends ExistingObject {
 
 
     public doesOverlayRect= (pos : Vector, center : Vector, hitbox : Vector) : boolean => 
-        this.exist &&
         this.pos.x + this.center.x + this.hitbox.x/2 >= pos.x + center.x - hitbox.x/2 &&
         this.pos.x + this.center.x - this.hitbox.x/2 <= pos.x + center.x + hitbox.x/2 &&
         this.pos.y + this.center.y + this.hitbox.y/2 >= pos.y + center.y - hitbox.y/2 &&

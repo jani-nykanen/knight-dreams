@@ -223,7 +223,8 @@ export class Game implements Scene {
         canvas.fillColor("#00000055");
         canvas.fillRect();
 
-        canvas.drawVerticallyWavingBitmap(bmpLogo, w/2 - bmpLogo.width/2, 16, Math.PI*2, 4, this.enterTimer*Math.PI*2);
+        // canvas.drawVerticallyWavingBitmap(bmpLogo, w/2 - bmpLogo.width/2, 16, Math.PI*2, 4, this.enterTimer*Math.PI*2);
+        canvas.drawBitmap(bmpLogo, w/2 - bmpLogo.width/2, 16);
 
         if (this.enterTimer >= 0.5) {
             
@@ -276,7 +277,7 @@ export class Game implements Scene {
             this.targetSpeed = 1.0 + (++ this.speedUpCount)*0.25;
             this.speedUpAlert = SPEED_UP_ALERT_TIME;
 
-            event.audio.playSample(event.assets.getSample("au"), 0.50);
+            // event.audio.playSample(event.assets.getSample("au"), 0.50);
         }
 
         this.globalSpeed = updateSpeedAxis(

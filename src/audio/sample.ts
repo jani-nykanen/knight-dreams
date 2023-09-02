@@ -18,7 +18,6 @@ export class Sample {
     private baseVolume : number;
     private type : OscillatorType;
     private ramp : Ramp;
-    private fadeVolumeFactor : number;
     private attackTime : number;
 
     private oscillator : OscillatorNode | undefined = undefined;
@@ -26,8 +25,7 @@ export class Sample {
 
     constructor(ctx : AudioContext, sequence : number[], 
         baseVolume : number, type : OscillatorType,
-        ramp : Ramp, fadeVolumeFactor : number,
-        attackTime : number) {
+        ramp : Ramp, attackTime : number) {
 
         this.ctx = ctx;
 
@@ -36,7 +34,6 @@ export class Sample {
         this.baseVolume = baseVolume;
         this.type = type;
         this.ramp = ramp;
-        this.fadeVolumeFactor = fadeVolumeFactor;
         this.attackTime = attackTime;
     }
 
@@ -87,7 +84,7 @@ export class Sample {
             osc.frequency[FUNC[this.ramp]](freq, time + timer);
             timer += 1.0/60.0*len;
         }
-        gain.gain.exponentialRampToValueAtTime(volume * this.fadeVolumeFactor, time + timer);
+        gain.gain.exponentialRampToValueAtTime(volume*0.50, time + timer);
         
         osc.connect(gain).connect(this.ctx.destination);
         osc.start(time);
