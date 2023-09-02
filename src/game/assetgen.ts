@@ -245,7 +245,7 @@ const generateTerrainTileset = (c : CanvasRenderingContext2D,
 
 const generateSky = (c : CanvasRenderingContext2D, 
     width : number, height : number, bmp : (Bitmap) []) : void => {
-/*
+
     const STARS = [
         [32, 16, 0],
         [84, 40, 1],
@@ -262,7 +262,7 @@ const generateSky = (c : CanvasRenderingContext2D,
         [128, 84, 1],
         [176, 88, 0],
     ];
-*/
+
     const circle = (cx : number, cy : number, radius : number) => {
 
         let ny : number;
@@ -289,12 +289,10 @@ const generateSky = (c : CanvasRenderingContext2D,
     circle(width - 66, 26, 26);
 
     // Stars
-    /*
     for (let a of STARS) {
 
         c.drawImage(bmp[0], 24, 88 + a[2]*4, 4, 4, a[0], a[1], 4, 4);
     }
-    */
 }
 
 
@@ -415,7 +413,7 @@ const generateAudio = (event : ProgramEvent) : void => {
             4
         )
     );
-    /*
+    
     event.assets.addSample("au",
         event.audio.createSample(
             [96, 6, 
@@ -429,7 +427,7 @@ const generateAudio = (event : ProgramEvent) : void => {
             6
         )
     );
-    */
+    
 
     // "Bounce" sound for balls, sounds annoying so commented out
 /*

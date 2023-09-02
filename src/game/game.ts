@@ -216,6 +216,7 @@ export class Game implements Scene {
 
         const bmpLogo = assets.getBitmap("l");
         const bmpFont = assets.getBitmap("fy");
+        const bmpFontWhite = assets.getBitmap("fw");
     
         const w = canvas.width;
         const h = canvas.height;
@@ -223,12 +224,20 @@ export class Game implements Scene {
         canvas.fillColor("#00000055");
         canvas.fillRect();
 
-        // canvas.drawVerticallyWavingBitmap(bmpLogo, w/2 - bmpLogo.width/2, 16, Math.PI*2, 4, this.enterTimer*Math.PI*2);
-        canvas.drawBitmap(bmpLogo, w/2 - bmpLogo.width/2, 16);
+        canvas.drawVerticallyWavingBitmap(bmpLogo, w/2 - bmpLogo.width/2, 12, Math.PI*2, 4, this.enterTimer*Math.PI*2);
+        // canvas.drawBitmap(bmpLogo, w/2 - bmpLogo.width/2, 16);
+
+        // Controls
+        canvas.fillRect(24, 48, canvas.width - 48, 56);
+        canvas.drawText(bmpFont, "CONTROLS: ", canvas.width/2, 52, 0, 0, TextAlign.Center);
+        canvas.drawText(bmpFontWhite, "+;/< OR A/D: MOVE", 28, 62);
+        canvas.drawText(bmpFontWhite, "+= OR W: JUMP/FLY", 28, 72);
+        canvas.drawText(bmpFontWhite, "+SPACE: ATTACK", 28, 82);
+        canvas.drawText(bmpFontWhite, "+ENTER: PAUSE", 28, 92);
 
         if (this.enterTimer >= 0.5) {
             
-            canvas.drawText(bmpFont, "PRESS ENTER", w/2, h - 52, -1, 0, TextAlign.Center);
+            canvas.drawText(bmpFont, "PRESS ENTER", w/2, h - 32, -1, 0, TextAlign.Center);
         }
 
         canvas.drawText(bmpFont, "$2023 JANI NYK%NEN", w/2, h - 9, -1, 0, TextAlign.Center);
@@ -277,7 +286,7 @@ export class Game implements Scene {
             this.targetSpeed = 1.0 + (++ this.speedUpCount)*0.25;
             this.speedUpAlert = SPEED_UP_ALERT_TIME;
 
-            // event.audio.playSample(event.assets.getSample("au"), 0.50);
+            event.audio.playSample(event.assets.getSample("au"), 0.50);
         }
 
         this.globalSpeed = updateSpeedAxis(

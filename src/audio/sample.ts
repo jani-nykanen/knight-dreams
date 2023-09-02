@@ -40,6 +40,7 @@ export class Sample {
 
     public play(volume : number) : void {
 
+        const INITIAL_VOLUME = 0.20;
         const FUNC = [ "setValueAtTime", "linearRampToValueAtTime", "exponentialRampToValueAtTime" ];
 
         const time = this.ctx.currentTime;
@@ -51,7 +52,7 @@ export class Sample {
         volume *= this.baseVolume;
 
         osc.frequency.setValueAtTime(this.baseSequence[0], time);
-        gain.gain.setValueAtTime(0.01, time);
+        gain.gain.setValueAtTime(INITIAL_VOLUME*volume, time);
         gain.gain.exponentialRampToValueAtTime(clamp(volume, 0.01, 1.0), time + this.attackTime/60.0);
 
         let timer = 0.0;

@@ -1,6 +1,10 @@
 import { Ramp, Sample } from "./sample.js";
 
 
+// Yes it's a constant now, need to save some bytes
+const GLOBAL_VOLUME = 0.40;
+
+
 export class AudioPlayer {
 
 
@@ -27,9 +31,6 @@ export class AudioPlayer {
 
 
     public playSample(s : Sample | undefined, volume = 1.0) : void {
-
-        // Yes it's a cosntant now, need to save some bytes
-        const GLOBAL_VOLUME = 0.40;
 
         // Let's pretend that it's never undefined
         if (!this.enabled) // || s === undefined)
