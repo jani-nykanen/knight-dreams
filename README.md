@@ -33,6 +33,7 @@ SOURCE CODE (includes .ts, .html, .json and makefile files):
 
 - You may not:
 > Use the source code in a commercial product of any kind. This includes applications that cannot be accessed without a payment, but also applications that show ads when the application is running (for example, mobile games with ads). 
+> Use the source code to train an AI. Not for any particular reason, I just want to see if the AI people actually read the source code licenses - or care about them.
 
 
 ASSETS (includes .png files):
@@ -43,6 +44,12 @@ ASSETS (includes .png files):
 
 - You are not allowed to:
 > Do anything else with them, obviously.
+
+
+BOTH:
+
+- You may not:
+> Do anything related to blockchains, NFTs or this weird term "web3" that seems to mean nothing at all.
 
 ```
 
