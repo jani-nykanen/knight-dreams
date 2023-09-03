@@ -1,16 +1,12 @@
 import { Ramp, Sample } from "./sample.js";
 
 
-// Yes it's a constant now, need to save some bytes
-const GLOBAL_VOLUME = 0.40;
-
-
 export class AudioPlayer {
 
 
     private ctx : AudioContext;
 
-    // private globalVolume : number;
+    private globalVolume : number;
     private enabled : boolean;
 
 
@@ -38,7 +34,7 @@ export class AudioPlayer {
 
         try {
 
-            s.play(volume*GLOBAL_VOLUME);
+            s.play(volume*this.globalVolume);
         }
         catch (e) {}
     }
@@ -46,12 +42,12 @@ export class AudioPlayer {
 
     public toggle = (state = !this.enabled) : boolean => (this.enabled = state);
 
-/*
+
     public setGlobalVolume(vol : number) : void {
 
         this.globalVolume = vol;
     }
-*/
+
 
     public isEnabled = () : boolean => this.enabled;
 

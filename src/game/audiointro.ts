@@ -7,9 +7,11 @@ import { Canvas } from "../renderer/canvas.js";
 
 
 const TEXT = 
-`ENABLE AUDIO? 
-PRESS ENTER TO 
-CONFIRM.`;
+`ENABLE AUDIO? PRESS
+ENTER TO CONFIRM.
+
+WARNING: AUDIO DOES
+NOT WORK ON SAFARI!`;
 
 
 export class AudioIntro implements Scene {
@@ -74,7 +76,7 @@ export class AudioIntro implements Scene {
     public redraw(canvas: Canvas, assets : AssetManager) : void {
 
         const CENTER_Y = 48;
-        const CONFIRM_BOX_CENTER_Y = 96;
+        const CONFIRM_BOX_CENTER_Y = 112;
         const MARGIN = 12;
 
         const fonts = [assets.getBitmap("fw"), assets.getBitmap("fy")];

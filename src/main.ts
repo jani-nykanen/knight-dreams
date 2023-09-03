@@ -7,7 +7,7 @@ import { AudioIntro } from "./game/audiointro.js";
 
 const initialEvent = (event : ProgramEvent) : void => {
 
-    // event.audio.setGlobalVolume(0.40);
+    event.audio.setGlobalVolume(0.40);
 
     // Yes, I had to manually shorten these names to save
     // some bytes. It's ugly, but necessary
