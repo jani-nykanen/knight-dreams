@@ -1,6 +1,6 @@
 ## Knight Dreams
 
-Knights Dreams (yes I know the title is dumb, I just couldn't come up with a better title that was short enough to fit the space I had reserved for it) is a tiny arcade endless runner action game that was made for [js13k competition (2023)](/https://js13kgames.com/). You can play it here: https://js13kgames.com/entries/knight dreams (I'm guessing the url, it might be incorrect, in that case look for the game manually).
+Knights Dreams (yes I know the title is dumb, I just couldn't come up with a better title that was short enough to fit the space I had reserved for it) is a tiny arcade endless runner action game that was made for [js13k competition (2023)](/https://js13kgames.com/). You can play it here: https://js13kgames.com/entries/knight-dreams (I'm guessing the url, it might be incorrect, in that case look for the game manually).
 
 ------
 
