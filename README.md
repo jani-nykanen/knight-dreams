@@ -15,6 +15,7 @@ The code is bad. Like, really bad in some places. This was, however, intentional
 Typescript installation is mandatory. If you just want to make changes to the code, running `tsc` on the root is sufficient. If you want to make a zipped and "optimized" package that should fit 13kB (provided that you have up-to-date versions of all the tools), you need the following tools:
 - Closure compiler
 - advzip
+
 Let us assume that you have the Closure compiler's `jar` file in the root and you have renamed it to `closure.jar`. Then you can run `CLOSURE_PATH=closure.jar make dist`. This should compile the Typescript, optimized the Javascript, embed the output script file to an index file and finally pack everything to a single zip file, of which size is then reduced using `advzip`. **Note that for some reason this might fail the first time you run the command, so try running it twice.**
 
 -------
